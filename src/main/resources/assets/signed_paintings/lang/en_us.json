@@ -65,5 +65,7 @@
     "signed_paintings.pixels_per_block" : "Pixels",
 
     "signed_paintings.upload_prompt" : "Upload to Imgur",
-    "signed_paintings.upload_fail" : "Upload Failed"
+    "signed_paintings.upload_fail" : "Upload Failed",
+    "signed_paintings.copy_url" : "\uD83D\uDDD0 Url",
+    "signed_paintings.copy_data" : "\uD83D\uDDD0 Data"
 }

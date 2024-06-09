@@ -28,15 +28,23 @@ public class SignSideInfo {
         loadURL(url, parts.length > 1 ? parts[1] : "", isFront, blockEntity, working);
     }
 
+    public String getData(){
+        return String.join("|", getParts());
+    }
+
+    public String getUrl(){
+        return SignedPaintingsClient.imageManager.applyURLInferences(getParts()[0]);
+    }
+
     private String[] getParts() {
         String combinedText = SignedPaintingsClient.currentSignEdit == null ? SignedPaintingsClient.combineSignText(text) : SignedPaintingsClient.currentSignEdit.screen.signedPaintings$getText();
         if (combinedText.startsWith(SignByteMapper.INITIALIZER_STRING)) {
             String[] parts = combinedText.substring(2).split(SignByteMapper.DELIMITER, 2);
             if (parts.length > 0) {
                 parts[0] = SignByteMapper.decode(parts[0]);
+                // Converted to previous format
+                combinedText = parts.length > 1 ? parts[0] + '|' + parts[1] : parts[0];
             }
-            // Converted to previous format
-            combinedText = parts[0] + '|' + parts[1];
         }
         return combinedText.split("[\\n ]|(\\|)", 2);
     }
