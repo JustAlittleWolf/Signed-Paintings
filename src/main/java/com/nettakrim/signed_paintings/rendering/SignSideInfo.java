@@ -3,6 +3,7 @@ package com.nettakrim.signed_paintings.rendering;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import com.nettakrim.signed_paintings.util.ImageData;
+import com.nettakrim.signed_paintings.util.SignByteMapper;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.util.math.MathHelper;
@@ -27,8 +28,24 @@ public class SignSideInfo {
         loadURL(url, parts.length > 1 ? parts[1] : "", isFront, blockEntity, working);
     }
 
+    public String getData(){
+        return String.join("|", getParts());
+    }
+
+    public String getUrl(){
+        return SignedPaintingsClient.imageManager.applyURLInferences(getParts()[0]);
+    }
+
     private String[] getParts() {
         String combinedText = SignedPaintingsClient.currentSignEdit == null ? SignedPaintingsClient.combineSignText(text) : SignedPaintingsClient.currentSignEdit.screen.signedPaintings$getText();
+        if (combinedText.startsWith(SignByteMapper.INITIALIZER_STRING)) {
+            String[] parts = combinedText.substring(2).split(SignByteMapper.DELIMITER, 2);
+            if (parts.length > 0) {
+                parts[0] = SignByteMapper.decode(parts[0]);
+                // Converted to previous format
+                combinedText = parts.length > 1 ? parts[0] + '|' + parts[1] : parts[0];
+            }
+        }
         return combinedText.split("[\\n ]|(\\|)", 2);
     }
 
@@ -224,10 +241,11 @@ public class SignSideInfo {
             String yOffsetString = getShortFloatString(yOffset);
             String pixelsPerBlockString = getShortFloatString(pixelsPerBlock);
 
-            String text = urlString + '|' + Centering.getName(true, xCentering) + Centering.getName(false, yCentering) + BackType.getName(backType) + '|' + widthString + ':' + heightString + '|' + yOffsetString + '|' + pixelsPerBlockString + '|' + extraText;
+            String text = urlString + '|' + Centering.getName(true, xCentering) + Centering.getName(false, yCentering) + BackType.getName(backType) + '|' + widthString + ':' + heightString + '|' + yOffsetString + '|' + pixelsPerBlockString;
+            String actualText = SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(text) + SignByteMapper.DELIMITER + extraText;
 
             SignedPaintingsClient.currentSignEdit.screen.signedPaintings$clear(false);
-            int newSelection = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$paste(text, 0, 0, true);
+            int newSelection = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$paste(actualText, 0, 0, true);
             SignedPaintingsClient.currentSignEdit.selectionManager.setSelection(newSelection, newSelection);
         }
 

@@ -13,11 +13,13 @@ import com.nettakrim.signed_paintings.rendering.SignSideInfo;
 import com.nettakrim.signed_paintings.util.ImageManager;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.AbstractSignEditScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.util.Clipboard;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
@@ -36,6 +38,8 @@ import java.util.Locale;
 
 @Mixin(AbstractSignEditScreen.class)
 public abstract class AbstractSignEditScreenMixin extends Screen implements AbstractSignEditScreenAccessor {
+    @Unique
+    private static final int BUTTON_HEIGHT = 20;
     @Shadow
     private SignText text;
 
@@ -94,7 +98,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         };
         for (Centering.Type yCentering : centering) {
             for (Centering.Type xCentering : reversedCentering) {
-                createCenteringButton(51, 20, xCentering, yCentering);
+                createCenteringButton(51, BUTTON_HEIGHT, xCentering, yCentering);
             }
         }
 
@@ -121,24 +125,27 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             info.working = true;
         }
 
-        inputSliders[2] = createYOffsetSlider(76, 50, 50, 20, 5, SignedPaintingsClient.MODID+".offset_y", yOffset);
+        inputSliders[2] = createYOffsetSlider(76, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID+".offset_y", yOffset);
         inputSliders[2].setOnValueChanged(this::onYOffsetSliderChanged);
 
-        inputSliders[0] = createSizingSlider(Centering.Type.MAX, 51, 50, 50, 20, 5, SignedPaintingsClient.MODID+".size.x", width);
-        createLockingButton(Centering.Type.CENTER, 51, 20, getAspectLockIcon(aspectLocked));
-        createResetButton(Centering.Type.CENTER, 51, 80, 20, Text.translatable(SignedPaintingsClient.MODID+".size.reset"));
-        inputSliders[1] = createSizingSlider(Centering.Type.MIN, 51, 50, 50, 20, 5, SignedPaintingsClient.MODID+".size.y", height);
+        inputSliders[0] = createSizingSlider(Centering.Type.MAX, 51, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID+".size.x", width);
+        createLockingButton(Centering.Type.CENTER, 51, BUTTON_HEIGHT, getAspectLockIcon(aspectLocked));
+        createResetButton(Centering.Type.CENTER, 51, 80, BUTTON_HEIGHT, Text.translatable(SignedPaintingsClient.MODID+".size.reset"));
+        inputSliders[1] = createSizingSlider(Centering.Type.MIN, 51, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID+".size.y", height);
 
         inputSliders[0].setOnValueChanged(value -> onSizeSliderChanged(value, true));
         inputSliders[1].setOnValueChanged(value -> onSizeSliderChanged(value, false));
         aspectRatio = width / height;
 
-        inputSliders[3] = createPixelSlider(101, 50, 50, 20, 5, SignedPaintingsClient.MODID+".pixels_per_block", pixelsPerBlock);
+        inputSliders[3] = createPixelSlider(101, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID+".pixels_per_block", pixelsPerBlock);
         inputSliders[3].setOnValueChanged(this::onPixelSliderChanged);
 
-        createBackModeButton(76, 105, 20, backType);
+        createBackModeButton(76, 105, BUTTON_HEIGHT, backType);
 
-        uploadButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".upload_prompt"), this::upload).dimensions(this.width / 2 - 100, (this.height / 4 + 144) - 25, 200, 20).build();
+        createCopyUrlButton();
+        createCopyUncompressedButton();
+
+        uploadButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".upload_prompt"), this::upload).dimensions(this.width / 2 - 100, (this.height / 4 + 144) - 25, 200, BUTTON_HEIGHT).build();
         addDrawableChild(uploadButton);
         addSelectableChild(uploadButton);
         if (uploadURL == null) uploadButton.visible = false;
@@ -172,6 +179,38 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         ButtonWidget widget = ButtonWidget.builder(getBackTypeText(backType), this::cyclePaintingBack)
                 .position((width/2)+60, yOffset+68)
                 .size(buttonWidth, buttonHeight)
+                .build();
+
+        addDrawableChild(widget);
+        addSelectableChild(widget);
+        buttons.add(widget);
+    }
+
+    @Unique
+    private void createCopyUrlButton() {
+        ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".copy_url"),
+                        button -> {
+                            copyToClipboard(SignedPaintingsClient.currentSignEdit.getSideInfo(front).getUrl());
+                            close();
+                        })
+                .position((width/2)-164, 40)
+                .size(48, BUTTON_HEIGHT)
+                .build();
+
+        addDrawableChild(widget);
+        addSelectableChild(widget);
+        buttons.add(widget);
+    }
+
+    @Unique
+    private void createCopyUncompressedButton() {
+        ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".copy_data"),
+                        button -> {
+                            copyToClipboard(SignedPaintingsClient.currentSignEdit.getSideInfo(front).getData());
+                            close();
+                        })
+                .position((width/2)-108, 40)
+                .size(48, BUTTON_HEIGHT)
                 .build();
 
         addDrawableChild(widget);
@@ -319,6 +358,15 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Unique
     private void onPixelSliderChanged(float value) {
         SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingPixelsPerBlock(value);
+    }
+
+    @Unique
+    private static void copyToClipboard(String string){
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player != null) {
+            Clipboard clipboard = new Clipboard();
+            clipboard.setClipboard(client.getWindow().getHandle(), string);
+        }
     }
 
     @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/block/entity/SignBlockEntity;ZZLnet/minecraft/text/Text;)V")
