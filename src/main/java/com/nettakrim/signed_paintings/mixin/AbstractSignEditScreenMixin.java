@@ -23,6 +23,7 @@ import net.minecraft.client.util.Clipboard;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -62,13 +63,22 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private SelectionManager selectionManager;
 
     @Unique
-    private final InputSlider[] inputSliders = new InputSlider[4];
+    private final InputSlider[] inputSliders = new InputSlider[9];
 
     @Unique
     private final ArrayList<ClickableWidget> buttons = new ArrayList<>();
 
     @Unique
+    private final ArrayList<ClickableWidget> advancedButtons = new ArrayList<>();
+
+    @Unique
+    private boolean isAdvancedEnabled = false;
+
+    @Unique
     private ClickableWidget uploadButton;
+
+    @Unique
+    private ClickableWidget advancedEnablerButton;
 
     protected AbstractSignEditScreenMixin(Text title) {
         super(title);
@@ -85,9 +95,13 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Unique
     private String uploadURL = null;
 
+    @Unique
+    private Vec3d rotationVec = new Vec3d(0,0,0);
+
     @Inject(at = @At("TAIL"), method = "init")
     private void init(CallbackInfo ci) {
         buttons.clear();
+        advancedButtons.clear();
 
         Centering.Type[] centering = Centering.Type.values();
         //x centering is reversed to make the buttons have a sensible order when using tab
@@ -105,7 +119,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         float width;
         float height;
         BackType.Type backType;
+        float xOffset;
         float yOffset;
+        float zOffset;
         float pixelsPerBlock;
 
         SignBlockEntityAccessor sign = (SignBlockEntityAccessor)blockEntity;
@@ -114,19 +130,21 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             width = 1f;
             height = 1f;
             backType = BackType.Type.SIGN;
+            xOffset = 0;
             yOffset = 0;
+            zOffset = 0;
             pixelsPerBlock = 0;
         } else {
             width = info.getWidth();
             height = info.getHeight();
             backType = info.getBackType();
+            xOffset = info.getXOffset();
             yOffset = info.getYOffset();
+            zOffset = info.getZOffset();
+            rotationVec = info.rotationVec;
             pixelsPerBlock = info.getPixelsPerBlock();
             info.working = true;
         }
-
-        inputSliders[2] = createYOffsetSlider(76, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID+".offset_y", yOffset);
-        inputSliders[2].setOnValueChanged(this::onYOffsetSliderChanged);
 
         inputSliders[0] = createSizingSlider(Centering.Type.MAX, 51, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID+".size.x", width);
         createLockingButton(Centering.Type.CENTER, 51, BUTTON_HEIGHT, getAspectLockIcon(aspectLocked));
@@ -137,13 +155,28 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         inputSliders[1].setOnValueChanged(value -> onSizeSliderChanged(value, false));
         aspectRatio = width / height;
 
-        inputSliders[3] = createPixelSlider(101, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID+".pixels_per_block", pixelsPerBlock);
-        inputSliders[3].setOnValueChanged(this::onPixelSliderChanged);
+        inputSliders[2] = createPixelSlider(101, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID+".pixels_per_block", pixelsPerBlock);
+        inputSliders[2].setOnValueChanged(this::onPixelSliderChanged);
+
+        inputSliders[3] = createOffsetSlider(76, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID+".offset_x", xOffset, true);
+        inputSliders[3].setOnValueChanged(this::onXOffsetSliderChanged);
+        inputSliders[4] = createOffsetSlider(96, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID+".offset_y", yOffset, false);
+        inputSliders[4].setOnValueChanged(this::onYOffsetSliderChanged);
+        inputSliders[5] = createOffsetSlider(116, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID+".offset_z", zOffset, true);
+        inputSliders[5].setOnValueChanged(this::onZOffsetSliderChanged);
+
+        inputSliders[6] = createRotateSlider(76, 50, 50, BUTTON_HEIGHT, 8, SignedPaintingsClient.MODID+".rotation_x", (float) rotationVec.x);
+        inputSliders[6].setOnValueChanged(this::onXRotationSliderChanged);
+        inputSliders[7] = createRotateSlider(96, 50, 50, BUTTON_HEIGHT, 8, SignedPaintingsClient.MODID+".rotation_y", (float) rotationVec.y);
+        inputSliders[7].setOnValueChanged(this::onYRotationSliderChanged);
+        inputSliders[8] = createRotateSlider(116, 50, 50, BUTTON_HEIGHT, 8, SignedPaintingsClient.MODID+".rotation_z", (float) rotationVec.z);
+        inputSliders[8].setOnValueChanged(this::onZRotationSliderChanged);
 
         createBackModeButton(76, 105, BUTTON_HEIGHT, backType);
 
         createCopyUrlButton();
         createCopyUncompressedButton();
+        createAdvanceEnablerButton();
 
         uploadButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".upload_prompt"), this::upload).dimensions(this.width / 2 - 100, (this.height / 4 + 144) - 25, 200, BUTTON_HEIGHT).build();
         addDrawableChild(uploadButton);
@@ -158,6 +191,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         if (info == null || !info.isReady()) {
             signedPaintings$setVisibility(false);
+        } else {
+            signedPaintings$setVisibility(true); // needed to disable advanced settings
         }
     }
 
@@ -219,6 +254,22 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
+    private void createAdvanceEnablerButton() {
+        advancedEnablerButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".advanced_settings"),
+                        button -> {
+                            isAdvancedEnabled = true;
+                            signedPaintings$setVisibility(true);
+                        })
+                .position((width/2)-165, 142)
+                .size(105, BUTTON_HEIGHT)
+                .build();
+
+        addDrawableChild(advancedEnablerButton);
+        addSelectableChild(advancedEnablerButton);
+        buttons.add(advancedEnablerButton);
+    }
+
+    @Unique
     private int getCenteringButtonPosition(int size, Centering.Type centering, int buttonSize, int screenSize) {
         return MathHelper.floor(Centering.getOffset(size, centering)) + screenSize/2 - buttonSize/2;
     }
@@ -265,18 +316,38 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
-    private InputSlider createYOffsetSlider(int yOffset, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue) {
+    private InputSlider createOffsetSlider(int yOffset, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue, boolean isAdvanced) {
         int x = (width/2)-60-(textWidth+sliderWidth+elementSpacing);
         int y = yOffset+68;
         InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, -8f, 8f, 1f, startingValue, -64f, 64f, Text.translatable(key));
 
         addDrawableChild(inputSlider.sliderWidget);
         addSelectableChild(inputSlider.sliderWidget);
-        buttons.add(inputSlider.sliderWidget);
+        addDrawableChild(inputSlider.textFieldWidget);
+        addSelectableChild(inputSlider.textFieldWidget);
+        if (isAdvanced) {
+            advancedButtons.add(inputSlider.sliderWidget);
+            advancedButtons.add(inputSlider.textFieldWidget);
+        } else {
+            buttons.add(inputSlider.sliderWidget);
+            buttons.add(inputSlider.textFieldWidget);
+        }
+
+        return inputSlider;
+    }
+
+    private InputSlider createRotateSlider(int yOffset, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue) {
+        int x = (width/2)-(textWidth+sliderWidth+elementSpacing)/2;
+        int y = yOffset+68;
+        InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, -180f, 180f, 22.5f, startingValue, -360f, 360f, Text.translatable(key));
+
+        addDrawableChild(inputSlider.sliderWidget);
+        addSelectableChild(inputSlider.sliderWidget);
+        advancedButtons.add(inputSlider.sliderWidget);
 
         addDrawableChild(inputSlider.textFieldWidget);
         addSelectableChild(inputSlider.textFieldWidget);
-        buttons.add(inputSlider.textFieldWidget);
+        advancedButtons.add(inputSlider.textFieldWidget);
 
         return inputSlider;
     }
@@ -351,8 +422,36 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
+    private void onXOffsetSliderChanged(float value) {
+        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingXOffset(value);
+    }
+
+    @Unique
     private void onYOffsetSliderChanged(float value) {
         SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingYOffset(value);
+    }
+
+    @Unique
+    private void onZOffsetSliderChanged(float value) {
+        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingZOffset(value);
+    }
+
+    @Unique
+    private void onXRotationSliderChanged(float value) {
+        rotationVec = new Vec3d(value, rotationVec.y, rotationVec.z);
+        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updateRotatingVector(rotationVec);
+    }
+
+    @Unique
+    private void onYRotationSliderChanged(float value) {
+        rotationVec = new Vec3d(rotationVec.x, value, rotationVec.z);
+        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updateRotatingVector(rotationVec);
+    }
+
+    @Unique
+    private void onZRotationSliderChanged(float value) {
+        rotationVec = new Vec3d(rotationVec.x, rotationVec.y, value);
+        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updateRotatingVector(rotationVec);
     }
 
     @Unique
@@ -516,6 +615,12 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     public void signedPaintings$setVisibility(boolean to) {
         for (ClickableWidget clickableWidget : buttons) {
             clickableWidget.visible = to;
+        }
+        for (ClickableWidget clickableWidget : advancedButtons) {
+            clickableWidget.visible = isAdvancedEnabled && to;
+        }
+        if (isAdvancedEnabled) {
+            advancedEnablerButton.visible = false;
         }
     }
 

@@ -60,7 +60,15 @@
     "signed_paintings.back_mode.block" : "Frame: Block",
     "signed_paintings.back_mode.none" : "Frame: None",
 
-    "signed_paintings.offset_y" : "Offset",
+    "signed_paintings.offset_x" : "Offset X",
+    "signed_paintings.offset_y" : "Offset Y",
+    "signed_paintings.offset_z" : "Offset Z",
+
+    "signed_paintings.rotation_x" : "RotationX",
+    "signed_paintings.rotation_y" : "RotationY",
+    "signed_paintings.rotation_z" : "RotationZ",
+
+    "signed_paintings.advanced_settings" : "Advanced Settings",
 
     "signed_paintings.pixels_per_block" : "Pixels",
 
