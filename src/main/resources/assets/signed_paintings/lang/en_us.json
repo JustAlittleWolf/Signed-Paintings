@@ -64,9 +64,9 @@
     "signed_paintings.offset_y" : "Offset Y",
     "signed_paintings.offset_z" : "Offset Z",
 
-    "signed_paintings.rotation_x" : "RotationX",
-    "signed_paintings.rotation_y" : "RotationY",
-    "signed_paintings.rotation_z" : "RotationZ",
+    "signed_paintings.rotation_x" : "Rotation X",
+    "signed_paintings.rotation_y" : "Rotation Y",
+    "signed_paintings.rotation_z" : "Rotation Z",
 
     "signed_paintings.advanced_settings" : "Advanced Settings",
 
