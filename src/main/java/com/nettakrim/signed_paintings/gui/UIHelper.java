@@ -112,6 +112,8 @@ public class UIHelper {
         inputSliders[2] = createInputSlider(-PADDING, getYPosition(0, 4.25f), SignedPaintingsClient.MODID + ".pixels_per_block", 0, 64, 16, 0, 1024, pixelsPerBlock);
         inputSliders[2].setOnValueChanged(UIHelper::onPixelSliderChanged);
         createButton(-PADDING, getYPosition(0, 5.25f), BUTTON_WIDTH, getBackgroundText(isBackgroundEnabled), UIHelper::cycleBackground);
+
+        createButton(-PADDING, getYPosition(yOff, 6.5f), BUTTON_WIDTH, Text.translatable("gui.done"), (ButtonWidget a) -> screen.close());
     }
 
     private static void createCenteringButtons() {

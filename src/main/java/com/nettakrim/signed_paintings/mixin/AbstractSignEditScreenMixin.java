@@ -69,6 +69,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Unique
     private ClickableWidget uploadButton;
 
+    @Unique
+    private ClickableWidget doneButton;
+
     protected AbstractSignEditScreenMixin(Text title) {
         super(title);
     }
@@ -138,6 +141,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Inject(at = @At("TAIL"), method = "init")
     private void init(CallbackInfo ci) {
+        doneButton = (ClickableWidget)this.children().get(0);
+
         UIHelper.init(front, this, (SignBlockEntityAccessor) blockEntity);
         ArrayList<ClickableWidget> uiButtons = UIHelper.getButtons();
         for (ClickableWidget widget : uiButtons) {
@@ -293,9 +298,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         if (!SignedPaintingsClient.currentSignEdit.sign.equals(blockEntity)) {
             return;
         }
+        uploadURL = null;
         if (link == null) {
             uploadButton.setMessage(Text.translatable(SignedPaintingsClient.MODID + ".upload_fail"));
-            uploadURL = null;
             return;
         }
         uploadButton.visible = false;
@@ -309,6 +314,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         for (ClickableWidget clickableWidget : UIHelper.getButtons()) {
             clickableWidget.visible = to;
         }
+        doneButton.visible = !to;
     }
 
     @Override
