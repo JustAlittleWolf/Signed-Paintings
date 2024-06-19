@@ -16,7 +16,8 @@
     "ScreenshotRecorderMixin",
     "SelectionManagerMixin",
     "SignBlockEntityMixin",
-    "SignBlockEntityRendererMixin"
+    "SignBlockEntityRendererMixin",
+    "SliderWidgetMixin"
   ],
   "injectors": {
     "defaultRequire": 1
