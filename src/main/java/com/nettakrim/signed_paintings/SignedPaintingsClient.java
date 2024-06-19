@@ -40,6 +40,7 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	public static boolean renderSigns;
 	public static boolean renderBanners;
 	public static boolean renderShields;
+	public static boolean reduceCulling;
 
 	public static boolean loggingEnabled = false;
 
@@ -58,6 +59,7 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		renderSigns = true;
 		renderBanners = true;
 		renderShields = true;
+		reduceCulling = false;
 
 		uploadManager = new UploadManager("c1802a39166b9d0");
 

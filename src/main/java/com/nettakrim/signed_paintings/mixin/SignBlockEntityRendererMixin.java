@@ -76,12 +76,12 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
 
     @Override
     public boolean rendersOutsideBoundingBox(SignBlockEntity blockEntity) {
-        return hasPainting((SignBlockEntityAccessor)blockEntity) || BlockEntityRenderer.super.rendersOutsideBoundingBox(blockEntity);
+        return (hasPainting((SignBlockEntityAccessor)blockEntity) && SignedPaintingsClient.reduceCulling) || BlockEntityRenderer.super.rendersOutsideBoundingBox(blockEntity);
     }
 
     @Override
     public boolean isInRenderDistance(SignBlockEntity blockEntity, Vec3d pos) {
-        return hasPainting((SignBlockEntityAccessor)blockEntity) || BlockEntityRenderer.super.isInRenderDistance(blockEntity, pos);
+        return (hasPainting((SignBlockEntityAccessor)blockEntity) && SignedPaintingsClient.reduceCulling)  || BlockEntityRenderer.super.isInRenderDistance(blockEntity, pos);
     }
 
     @Unique

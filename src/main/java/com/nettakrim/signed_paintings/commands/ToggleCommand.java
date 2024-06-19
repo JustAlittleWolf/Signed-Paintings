@@ -33,10 +33,16 @@ public class ToggleCommand {
                 .executes(ToggleCommand::toggleShields)
                 .build();
 
+        LiteralCommandNode<FabricClientCommandSource> cullingNode = ClientCommandManager
+                .literal("culling")
+                .executes(ToggleCommand::toggleCulling)
+                .build();
+
         toggleNode.addChild(allNode);
         toggleNode.addChild(signNode);
         toggleNode.addChild(bannersNode);
         toggleNode.addChild(shieldsNode);
+        toggleNode.addChild(cullingNode);
         return toggleNode;
     }
 
@@ -64,6 +70,12 @@ public class ToggleCommand {
     private static int toggleShields(CommandContext<FabricClientCommandSource> context) {
         SignedPaintingsClient.renderShields = !SignedPaintingsClient.renderShields;
         sayMessage("shields", SignedPaintingsClient.renderShields);
+        return 1;
+    }
+
+    private static int toggleCulling(CommandContext<FabricClientCommandSource> context) {
+        SignedPaintingsClient.reduceCulling = !SignedPaintingsClient.reduceCulling;
+        sayMessage("culling", SignedPaintingsClient.reduceCulling);
         return 1;
     }
 

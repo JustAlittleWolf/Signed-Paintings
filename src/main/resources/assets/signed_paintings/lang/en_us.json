@@ -26,6 +26,8 @@
     "signed_paintings.commands.toggle.banners.off" : "Banner image rendering disabled",
     "signed_paintings.commands.toggle.shields.on" : "Shield image rendering enabled",
     "signed_paintings.commands.toggle.shields.off" : "Shield image rendering disabled",
+    "signed_paintings.commands.toggle.culling.on" : "Culling Reduced (images can be seen from further away, but fps may be lower)",
+    "signed_paintings.commands.toggle.culling.off" : "Culling Enabled (images can only be seen if the sign is in view, but fps may be better)",
 
     "signed_paintings.commands.block.add" : "Added %s to block list",
     "signed_paintings.commands.block.add.all" : "\nAdding all loaded images to block list:",
