@@ -84,18 +84,18 @@ public class UIHelper {
         createButton(PADDING, yOff, (BUTTON_WIDTH - SPACING_X) / 2, Text.translatable(SignedPaintingsClient.MODID + ".copy_url"), UIHelper::copyURL);
         createButton(MathHelper.ceil(PADDING + (BUTTON_WIDTH + SPACING_X) / 2f), yOff, (BUTTON_WIDTH - SPACING_X) / 2, Text.translatable(SignedPaintingsClient.MODID + ".copy_data"), UIHelper::copyData);
 
-        inputSliders[3] = createInputSlider(PADDING, getYPosition(yOff, 1.5f), SignedPaintingsClient.MODID + ".offset_x", -8f, 8f, 0.25f, -64f, 64f, offsetVec.x);
+        inputSliders[3] = createInputSlider(PADDING, getYPosition(yOff, 1.25f), SignedPaintingsClient.MODID + ".offset_x", -8f, 8f, 0.25f, -64f, 64f, offsetVec.x);
         inputSliders[3].setOnValueChanged(UIHelper::onXOffsetSliderChanged);
-        inputSliders[4] = createInputSlider(PADDING, getYPosition(yOff, 2.5f), SignedPaintingsClient.MODID + ".offset_y", -8f, 8f, 0.25f, -64f, 64f, offsetVec.y);
+        inputSliders[4] = createInputSlider(PADDING, getYPosition(yOff, 2.25f), SignedPaintingsClient.MODID + ".offset_y", -8f, 8f, 0.25f, -64f, 64f, offsetVec.y);
         inputSliders[4].setOnValueChanged(UIHelper::onYOffsetSliderChanged);
-        inputSliders[5] = createInputSlider(PADDING, getYPosition(yOff, 3.5f), SignedPaintingsClient.MODID + ".offset_z", -8f, 8f, 0.25f, -64f, 64f, offsetVec.z);
+        inputSliders[5] = createInputSlider(PADDING, getYPosition(yOff, 3.25f), SignedPaintingsClient.MODID + ".offset_z", -8f, 8f, 0.25f, -64f, 64f, offsetVec.z);
         inputSliders[5].setOnValueChanged(UIHelper::onZOffsetSliderChanged);
 
-        inputSliders[6] = createInputSlider(PADDING, getYPosition(yOff, 5f), SignedPaintingsClient.MODID + ".rotation_x", -180f, 180f, 22.5f, -360f, 360f, rotationVec.x);
+        inputSliders[6] = createInputSlider(PADDING, getYPosition(yOff, 4.5f), SignedPaintingsClient.MODID + ".rotation_x", -180f, 180f, 22.5f, -360f, 360f, rotationVec.x);
         inputSliders[6].setOnValueChanged(UIHelper::onXRotationSliderChanged);
-        inputSliders[7] = createInputSlider(PADDING, getYPosition(yOff, 6f), SignedPaintingsClient.MODID + ".rotation_y", -180f, 180f, 22.5f, -360f, 360f, rotationVec.y);
+        inputSliders[7] = createInputSlider(PADDING, getYPosition(yOff, 5.5f), SignedPaintingsClient.MODID + ".rotation_y", -180f, 180f, 22.5f, -360f, 360f, rotationVec.y);
         inputSliders[7].setOnValueChanged(UIHelper::onYRotationSliderChanged);
-        inputSliders[8] = createInputSlider(PADDING, getYPosition(yOff, 7f), SignedPaintingsClient.MODID + ".rotation_z", -180f, 180f, 22.5f, -360f, 360f, rotationVec.z);
+        inputSliders[8] = createInputSlider(PADDING, getYPosition(yOff, 6.5f), SignedPaintingsClient.MODID + ".rotation_z", -180f, 180f, 22.5f, -360f, 360f, rotationVec.z);
         inputSliders[8].setOnValueChanged(UIHelper::onZRotationSliderChanged);
 
         //RIGHT
@@ -108,10 +108,10 @@ public class UIHelper {
         inputSliders[1].setOnValueChanged(value -> onSizeSliderChanged(value, false));
         aspectRatio = width / height;
 
-        backModeButton = createButton(-PADDING, getYPosition(0, 3.5f), BUTTON_WIDTH, getBackTypeText(backType), UIHelper::cyclePaintingBack);
-        inputSliders[2] = createInputSlider(-PADDING, getYPosition(0, 4.5f), SignedPaintingsClient.MODID + ".pixels_per_block", 0, 64, 16, 0, 1024, pixelsPerBlock);
+        backModeButton = createButton(-PADDING, getYPosition(0, 3.25f), BUTTON_WIDTH, getBackTypeText(backType), UIHelper::cyclePaintingBack);
+        inputSliders[2] = createInputSlider(-PADDING, getYPosition(0, 4.25f), SignedPaintingsClient.MODID + ".pixels_per_block", 0, 64, 16, 0, 1024, pixelsPerBlock);
         inputSliders[2].setOnValueChanged(UIHelper::onPixelSliderChanged);
-        createButton(-PADDING, getYPosition(0, 5.5f), BUTTON_WIDTH, getBackgroundText(isBackgroundEnabled), UIHelper::cycleBackground);
+        createButton(-PADDING, getYPosition(0, 5.25f), BUTTON_WIDTH, getBackgroundText(isBackgroundEnabled), UIHelper::cycleBackground);
     }
 
     private static void createCenteringButtons() {
