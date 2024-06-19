@@ -87,6 +87,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         PaintingInfo info = getInfo();
         if (info != null && info.isReady()) {
             renderUI(context);
+            super.render(context, mouseX, mouseY, delta);
             ci.cancel();
         }
     }
@@ -98,10 +99,10 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Override
-    public void renderInGameBackground(DrawContext context) {
+    public void renderBackground(DrawContext context) {
         PaintingInfo info = getInfo();
         if (info == null || !info.isReady() || UIHelper.isBackgroundEnabled()) {
-            super.renderInGameBackground(context);
+            super.renderBackground(context);
         }
     }
 
@@ -109,6 +110,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private void renderUI(DrawContext context) {
         // This could be improved in future with smaller Mixin
         DiffuseLighting.disableGuiDepthLighting();
+        this.renderBackground(context);
         BlockState blockState = this.blockEntity.getCachedState();
         context.getMatrices().push();
         if (this.getClass().equals(SignEditScreen.class)) {
