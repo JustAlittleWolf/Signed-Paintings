@@ -76,8 +76,7 @@ public class InputSlider {
 
     public void onTextChanged(String newValue) {
         try {
-            value = MathHelper.clamp(Float.parseFloat(newValue), minValue, maxValue);
-            if (onValueChanged != null) onValueChanged.accept(value);
+            onChange(Float.parseFloat(newValue));
             updateSlider();
         }
         catch (NumberFormatException ignored) {
@@ -86,9 +85,15 @@ public class InputSlider {
     }
 
     public void onSliderChanged(float newValue) {
-        value = MathHelper.clamp(newValue, minValue, maxValue);
-        if (onValueChanged != null) onValueChanged.accept(value);
+        onChange(newValue);
         updateTextField();
+    }
+
+    private void onChange(float newValue) {
+        if (Float.isFinite(newValue)) {
+            value = MathHelper.clamp(newValue, minValue, maxValue);
+            if (onValueChanged != null) onValueChanged.accept(value);
+        }
     }
 
     public void setValue(float to) {
@@ -165,8 +170,10 @@ public class InputSlider {
             float round = (max-min)/step;
             value = Math.round(value*round)/round;
             float result = (float)(min + (max-min) * value);
-            BigDecimal bd = new BigDecimal(result);
-            onChange.accept(bd.setScale(3, RoundingMode.HALF_UP).floatValue());
+            if (Double.isFinite(value)) {
+                BigDecimal bd = new BigDecimal(result);
+                onChange.accept(bd.setScale(3, RoundingMode.HALF_UP).floatValue());
+            }
         }
 
         public void setValue(float to) {

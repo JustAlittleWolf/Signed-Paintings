@@ -210,8 +210,13 @@ public class UIHelper {
 
     private static void onSizeSliderChanged(float value, boolean isWidth) {
         if (aspectLocked) {
-            if (isWidth) value /= aspectRatio;
-            else value *= aspectRatio;
+            if (isWidth) {
+                if (aspectRatio > 0) {
+                    value /= aspectRatio;
+                }
+            } else {
+                value *= aspectRatio;
+            }
 
             value = SignedPaintingsClient.roundFloatTo3DP(value);
 
@@ -300,6 +305,7 @@ public class UIHelper {
         inputSliders[7].setValue(info.paintingInfo.rotationVec.y);
         inputSliders[8].setValue(info.paintingInfo.rotationVec.z);
         backModeButton.setMessage(getBackTypeText(info.paintingInfo.getBackType()));
+        aspectRatio = info.paintingInfo.getWidth() / info.paintingInfo.getHeight();
     }
 
     public static void addButton(BackgroundClick backgroundClick) {

@@ -50,6 +50,10 @@ public class Cuboid {
     }
 
     public void renderFace(VertexConsumer vertexConsumer, Vector3f face, boolean split, float minU, float maxU, float minV, float maxV, int light) {
+        if (positionCache == null) {
+            return;
+        }
+
         AxisAngle4f rotation;
 
         if (face.y == 0) {
