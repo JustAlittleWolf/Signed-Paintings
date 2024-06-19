@@ -71,8 +71,6 @@
     "signed_paintings.rotation_y" : "Rotation Y",
     "signed_paintings.rotation_z" : "Rotation Z",
 
-    "signed_paintings.advanced_settings" : "Advanced Settings",
-
     "signed_paintings.pixels_per_block" : "Pixels",
 
     "signed_paintings.upload_prompt" : "Upload to Imgur",
