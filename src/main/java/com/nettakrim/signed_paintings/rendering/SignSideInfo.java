@@ -71,7 +71,7 @@ public class SignSideInfo {
 
         if (data.ready && SignedPaintingsClient.currentSignEdit != null && ((SignBlockEntityAccessor)SignedPaintingsClient.currentSignEdit.sign).signedPaintings$hasSignSideInfo(this)) {
             SignedPaintingsClient.currentSignEdit.screen.signedPaintings$setVisibility(true);
-            SignedPaintingsClient.currentSignEdit.screen.signedPaintings$initSliders(cache.width, cache.height);
+            SignedPaintingsClient.currentSignEdit.screen.signedPaintings$initSliders(this);
         }
     }
 

@@ -60,6 +60,9 @@
     "signed_paintings.back_mode.block" : "Frame: Block",
     "signed_paintings.back_mode.none" : "Frame: None",
 
+    "signed_paintings.background.y" : "UI background: On",
+    "signed_paintings.background.n" : "UI background: Off",
+
     "signed_paintings.offset_x" : "Offset X",
     "signed_paintings.offset_y" : "Offset Y",
     "signed_paintings.offset_z" : "Offset Z",
