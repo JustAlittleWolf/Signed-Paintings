@@ -13,7 +13,6 @@ import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.util.Clipboard;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -52,9 +51,6 @@ public class UIHelper {
         float width;
         float height;
         BackType.Type backType;
-        float xOffset;
-        float yOffset;
-        float zOffset;
         float pixelsPerBlock;
 
         info = front ? blockEntity.signedPaintings$getFrontPaintingInfo() : blockEntity.signedPaintings$getBackPaintingInfo();
@@ -89,18 +85,18 @@ public class UIHelper {
         inputSliders[2].setOnValueChanged(UIHelper::onPixelSliderChanged);
         createBackgroundButton(104, BUTTON_HEIGHT);
 
-        inputSliders[3] = createOffsetSlider(0, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".offset_x", (float) offsetVec.x, true);
+        inputSliders[3] = createOffsetSlider(0, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".offset_x", offsetVec.x);
         inputSliders[3].setOnValueChanged(UIHelper::onXOffsetSliderChanged);
-        inputSliders[4] = createOffsetSlider(16, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".offset_y", (float) offsetVec.y, false);
+        inputSliders[4] = createOffsetSlider(16, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".offset_y", offsetVec.y);
         inputSliders[4].setOnValueChanged(UIHelper::onYOffsetSliderChanged);
-        inputSliders[5] = createOffsetSlider(32, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".offset_z", (float) offsetVec.z, true);
+        inputSliders[5] = createOffsetSlider(32, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".offset_z", offsetVec.z);
         inputSliders[5].setOnValueChanged(UIHelper::onZOffsetSliderChanged);
 
-        inputSliders[6] = createRotateSlider(0, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".rotation_x", (float) rotationVec.x);
+        inputSliders[6] = createRotateSlider(0, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".rotation_x", rotationVec.x);
         inputSliders[6].setOnValueChanged(UIHelper::onXRotationSliderChanged);
-        inputSliders[7] = createRotateSlider(16, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".rotation_y", (float) rotationVec.y);
+        inputSliders[7] = createRotateSlider(16, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".rotation_y", rotationVec.y);
         inputSliders[7].setOnValueChanged(UIHelper::onYRotationSliderChanged);
-        inputSliders[8] = createRotateSlider(32, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".rotation_z", (float) rotationVec.z);
+        inputSliders[8] = createRotateSlider(32, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".rotation_z", rotationVec.z);
         inputSliders[8].setOnValueChanged(UIHelper::onZRotationSliderChanged);
 
         createCopyUrlButton();
@@ -205,7 +201,7 @@ public class UIHelper {
         buttons.add(widget);
     }
 
-    private static InputSlider createOffsetSlider(int yOffset, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue, boolean isAdvanced) {
+    private static InputSlider createOffsetSlider(int yOffset, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue) {
         int x = PADDING;
         int y = 64 + BUTTON_HEIGHT + 4 + yOffset;
         InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, -8f, 8f, 0.25f, startingValue, -64f, 64f, Text.translatable(key));
@@ -349,12 +345,12 @@ public class UIHelper {
         inputSliders[0].setValue(info.paintingInfo.getWidth());
         inputSliders[1].setValue(info.paintingInfo.getHeight());
         inputSliders[2].setValue(info.paintingInfo.getPixelsPerBlock());
-        inputSliders[3].setValue((float) info.paintingInfo.offsetVec.x);
-        inputSliders[4].setValue((float) info.paintingInfo.offsetVec.y);
-        inputSliders[5].setValue((float) info.paintingInfo.offsetVec.z);
-        inputSliders[6].setValue((float) info.paintingInfo.rotationVec.x);
-        inputSliders[7].setValue((float) info.paintingInfo.rotationVec.y);
-        inputSliders[8].setValue((float) info.paintingInfo.rotationVec.z);
+        inputSliders[3].setValue(info.paintingInfo.offsetVec.x);
+        inputSliders[4].setValue(info.paintingInfo.offsetVec.y);
+        inputSliders[5].setValue(info.paintingInfo.offsetVec.z);
+        inputSliders[6].setValue(info.paintingInfo.rotationVec.x);
+        inputSliders[7].setValue(info.paintingInfo.rotationVec.y);
+        inputSliders[8].setValue(info.paintingInfo.rotationVec.z);
         backModeButton.setMessage(getBackTypeText(info.paintingInfo.getBackType()));
     }
 

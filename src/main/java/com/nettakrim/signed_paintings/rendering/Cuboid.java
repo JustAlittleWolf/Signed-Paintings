@@ -1,7 +1,5 @@
 package com.nettakrim.signed_paintings.rendering;
 
-import com.nettakrim.signed_paintings.SignedPaintingsClient;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;

@@ -216,7 +216,7 @@ public class SignSideInfo {
 
             StringBuilder builder = new StringBuilder();
             for (int i = currentIndex; i < parts.length; i++) {
-                if (builder.length() > 0) builder.append(" ");
+                if (!builder.isEmpty()) builder.append(" ");
                 builder.append(parts[i]);
             }
             this.extraText = builder.toString();
