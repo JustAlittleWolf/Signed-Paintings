@@ -1,28 +1,31 @@
 package com.nettakrim.signed_paintings.mixin;
 
-import com.nettakrim.signed_paintings.*;
+import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.access.AbstractSignEditScreenAccessor;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import com.nettakrim.signed_paintings.gui.BackgroundClick;
 import com.nettakrim.signed_paintings.gui.InputSlider;
 import com.nettakrim.signed_paintings.gui.SignEditingInfo;
-import com.nettakrim.signed_paintings.rendering.BackType;
-import com.nettakrim.signed_paintings.rendering.Centering;
+import com.nettakrim.signed_paintings.gui.UIHelper;
 import com.nettakrim.signed_paintings.rendering.PaintingInfo;
 import com.nettakrim.signed_paintings.rendering.SignSideInfo;
 import com.nettakrim.signed_paintings.util.ImageManager;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.SignBlock;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.AbstractSignEditScreen;
+import net.minecraft.client.gui.screen.ingame.SignEditScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.util.Clipboard;
+import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
+import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,16 +33,15 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
-import java.util.Locale;
 
 @Mixin(AbstractSignEditScreen.class)
 public abstract class AbstractSignEditScreenMixin extends Screen implements AbstractSignEditScreenAccessor {
-    @Unique
-    private static final int BUTTON_HEIGHT = 20;
+
     @Shadow
     private SignText text;
 
@@ -62,10 +64,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private SelectionManager selectionManager;
 
     @Unique
-    private final InputSlider[] inputSliders = new InputSlider[4];
-
-    @Unique
-    private final ArrayList<ClickableWidget> buttons = new ArrayList<>();
+    private String uploadURL = null;
 
     @Unique
     private ClickableWidget uploadButton;
@@ -74,300 +73,93 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         super(title);
     }
 
-    @Shadow protected abstract void setCurrentRowMessage(String message);
+    @Shadow
+    protected abstract void setCurrentRowMessage(String message);
+
+    @Shadow
+    protected abstract void renderSignText(DrawContext context);
+
+    @Shadow
+    protected abstract void renderSignBackground(DrawContext var1, BlockState var2);
+
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/DiffuseLighting;disableGuiDepthLighting()V"), cancellable = true)
+    private void modifyRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        PaintingInfo info = getInfo();
+        if (info != null && info.isReady()) {
+            renderUI(context);
+            super.render(context, mouseX, mouseY, delta);
+            ci.cancel();
+        }
+    }
 
     @Unique
-    private boolean aspectLocked = true;
+    private PaintingInfo getInfo() {
+        SignBlockEntityAccessor sign = (SignBlockEntityAccessor) blockEntity;
+        return front ? sign.signedPaintings$getFrontPaintingInfo() : sign.signedPaintings$getBackPaintingInfo();
+    }
+
+    @Override
+    public void renderBackground(DrawContext context) {
+        PaintingInfo info = getInfo();
+        if (info == null || !info.isReady() || UIHelper.isBackgroundEnabled()) {
+            super.renderBackground(context);
+        }
+    }
 
     @Unique
-    private float aspectRatio;
+    private void renderUI(DrawContext context) {
+        // This could be improved in future with smaller Mixin
+        DiffuseLighting.disableGuiDepthLighting();
+        this.renderBackground(context);
+        BlockState blockState = this.blockEntity.getCachedState();
+        context.getMatrices().push();
+        if (this.getClass().equals(SignEditScreen.class)) {
+            boolean bl = blockState.getBlock() instanceof SignBlock;
+            if (bl) {
+                context.getMatrices().translate(0.0f, -16.0f, -50.0f);
+            } else {
+                context.getMatrices().translate(0.0f, -4.0f, -50.0f);
+            }
+        }
+        context.getMatrices().translate(90.0f, 38.0f, 50.0f);
+        context.getMatrices().scale(0.5f, 0.5f, 0.5f);
+        context.getMatrices().push();
+        this.renderSignBackground(context, blockState);
+        context.getMatrices().pop();
+        this.renderSignText(context);
+        context.getMatrices().pop();
+        DiffuseLighting.enableGuiDepthLighting();
+    }
 
-    @Unique
-    private String uploadURL = null;
+    @Redirect(method = "renderSignText", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/AbstractSignEditScreen;getTextScale()Lorg/joml/Vector3f;"))
+    private Vector3f modifyGetTextScale(AbstractSignEditScreen instance) {
+        return new Vector3f(1.0f, 1.0f, 1.0f); // For some reason Signs had ugly 0.96
+    }
 
     @Inject(at = @At("TAIL"), method = "init")
     private void init(CallbackInfo ci) {
-        buttons.clear();
-
-        Centering.Type[] centering = Centering.Type.values();
-        //x centering is reversed to make the buttons have a sensible order when using tab
-        Centering.Type[] reversedCentering = new Centering.Type[] {
-            Centering.Type.MAX,
-            Centering.Type.CENTER,
-            Centering.Type.MIN
-        };
-        for (Centering.Type yCentering : centering) {
-            for (Centering.Type xCentering : reversedCentering) {
-                createCenteringButton(51, BUTTON_HEIGHT, xCentering, yCentering);
-            }
+        UIHelper.init(front, this, (SignBlockEntityAccessor) blockEntity);
+        ArrayList<ClickableWidget> uiButtons = UIHelper.getButtons();
+        for (ClickableWidget widget : uiButtons) {
+            addDrawableChild(widget);
+            addSelectableChild(widget);
         }
 
-        float width;
-        float height;
-        BackType.Type backType;
-        float yOffset;
-        float pixelsPerBlock;
-
-        SignBlockEntityAccessor sign = (SignBlockEntityAccessor)blockEntity;
-        PaintingInfo info = front ? sign.signedPaintings$getFrontPaintingInfo() : sign.signedPaintings$getBackPaintingInfo();
-        if (info == null) {
-            width = 1f;
-            height = 1f;
-            backType = BackType.Type.SIGN;
-            yOffset = 0;
-            pixelsPerBlock = 0;
-        } else {
-            width = info.getWidth();
-            height = info.getHeight();
-            backType = info.getBackType();
-            yOffset = info.getYOffset();
-            pixelsPerBlock = info.getPixelsPerBlock();
-            info.working = true;
-        }
-
-        inputSliders[2] = createYOffsetSlider(76, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID+".offset_y", yOffset);
-        inputSliders[2].setOnValueChanged(this::onYOffsetSliderChanged);
-
-        inputSliders[0] = createSizingSlider(Centering.Type.MAX, 51, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID+".size.x", width);
-        createLockingButton(Centering.Type.CENTER, 51, BUTTON_HEIGHT, getAspectLockIcon(aspectLocked));
-        createResetButton(Centering.Type.CENTER, 51, 80, BUTTON_HEIGHT, Text.translatable(SignedPaintingsClient.MODID+".size.reset"));
-        inputSliders[1] = createSizingSlider(Centering.Type.MIN, 51, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID+".size.y", height);
-
-        inputSliders[0].setOnValueChanged(value -> onSizeSliderChanged(value, true));
-        inputSliders[1].setOnValueChanged(value -> onSizeSliderChanged(value, false));
-        aspectRatio = width / height;
-
-        inputSliders[3] = createPixelSlider(101, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID+".pixels_per_block", pixelsPerBlock);
-        inputSliders[3].setOnValueChanged(this::onPixelSliderChanged);
-
-        createBackModeButton(76, 105, BUTTON_HEIGHT, backType);
-
-        createCopyUrlButton();
-        createCopyUncompressedButton();
-
-        uploadButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".upload_prompt"), this::upload).dimensions(this.width / 2 - 100, (this.height / 4 + 144) - 25, 200, BUTTON_HEIGHT).build();
+        uploadButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".upload_prompt"), this::upload).dimensions(this.width / 2 - 100, (this.height / 4 + 144) - 25, 200, 20).build();
         addDrawableChild(uploadButton);
         addSelectableChild(uploadButton);
         if (uploadURL == null) uploadButton.visible = false;
 
-        BackgroundClick backgroundClick = new BackgroundClick(inputSliders);
+        BackgroundClick backgroundClick = new BackgroundClick(UIHelper.getInputSliders());
         addSelectableChild(backgroundClick);
-        buttons.add(backgroundClick);
+        UIHelper.addButton(backgroundClick);
 
         SignedPaintingsClient.currentSignEdit.setSelectionManager(selectionManager);
 
-        if (info == null || !info.isReady()) {
-            signedPaintings$setVisibility(false);
-        }
+        PaintingInfo info = UIHelper.getInfo();
+        signedPaintings$setVisibility(info != null && info.isReady());
     }
 
-    @Unique
-    private void createCenteringButton(int areaSize, int buttonSize, Centering.Type xCentering, Centering.Type yCentering) {
-        String id = (Centering.getName(true, xCentering)+Centering.getName(false, yCentering)).toLowerCase(Locale.ROOT);
-        ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".align."+id), button -> SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingCentering(xCentering, yCentering))
-        .position(getCenteringButtonPosition(areaSize, xCentering, buttonSize, width)-(areaSize/2)-(buttonSize/2)-60, getCenteringButtonPosition(-areaSize, yCentering, buttonSize, 0)+(areaSize/2)+(buttonSize/2)+67)
-        .size(buttonSize, buttonSize)
-        .build();
-
-        addDrawableChild(widget);
-        addSelectableChild(widget);
-        buttons.add(widget);
-    }
-
-    @Unique
-    private void createBackModeButton(int yOffset, int buttonWidth, int buttonHeight, BackType.Type backType) {
-        ButtonWidget widget = ButtonWidget.builder(getBackTypeText(backType), this::cyclePaintingBack)
-                .position((width/2)+60, yOffset+68)
-                .size(buttonWidth, buttonHeight)
-                .build();
-
-        addDrawableChild(widget);
-        addSelectableChild(widget);
-        buttons.add(widget);
-    }
-
-    @Unique
-    private void createCopyUrlButton() {
-        ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".copy_url"),
-                        button -> {
-                            copyToClipboard(SignedPaintingsClient.currentSignEdit.getSideInfo(front).getUrl());
-                            close();
-                        })
-                .position((width/2)-164, 40)
-                .size(48, BUTTON_HEIGHT)
-                .build();
-
-        addDrawableChild(widget);
-        addSelectableChild(widget);
-        buttons.add(widget);
-    }
-
-    @Unique
-    private void createCopyUncompressedButton() {
-        ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".copy_data"),
-                        button -> {
-                            copyToClipboard(SignedPaintingsClient.currentSignEdit.getSideInfo(front).getData());
-                            close();
-                        })
-                .position((width/2)-108, 40)
-                .size(48, BUTTON_HEIGHT)
-                .build();
-
-        addDrawableChild(widget);
-        addSelectableChild(widget);
-        buttons.add(widget);
-    }
-
-    @Unique
-    private int getCenteringButtonPosition(int size, Centering.Type centering, int buttonSize, int screenSize) {
-        return MathHelper.floor(Centering.getOffset(size, centering)) + screenSize/2 - buttonSize/2;
-    }
-
-    @Unique
-    private InputSlider createSizingSlider(Centering.Type centering, int areaSize, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue) {
-        int x = (width/2)+60;
-        int y = getCenteringButtonPosition(areaSize, centering, widgetHeight, 0)+(areaSize/2)+(widgetHeight/2)+67;
-        InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, 0.5f, 10f, 0.5f, startingValue, 1/32f, 64f, Text.translatable(key));
-
-        addDrawableChild(inputSlider.sliderWidget);
-        addSelectableChild(inputSlider.sliderWidget);
-        buttons.add(inputSlider.sliderWidget);
-
-        addDrawableChild(inputSlider.textFieldWidget);
-        addSelectableChild(inputSlider.textFieldWidget);
-        buttons.add(inputSlider.textFieldWidget);
-
-        return inputSlider;
-    }
-
-    @Unique
-    private void createLockingButton(Centering.Type centering, int areaSize, int buttonSize, Text text) {
-        ButtonWidget widget = ButtonWidget.builder(text, this::toggleAspectLock)
-        .position((width/2)+60, getCenteringButtonPosition(areaSize, centering, buttonSize, 0)+(areaSize/2)+(buttonSize/2)+67)
-        .size(buttonSize, buttonSize)
-        .build();
-
-        addDrawableChild(widget);
-        addSelectableChild(widget);
-        buttons.add(widget);
-    }
-
-    @Unique
-    private void createResetButton(Centering.Type centering, int areaSize, int buttonWidth, int buttonHeight, Text text) {
-        ButtonWidget widget = ButtonWidget.builder(text, this::resetSize)
-                .position((width/2)+60+25, getCenteringButtonPosition(areaSize, centering, buttonHeight, 0)+(areaSize/2)+(buttonHeight/2)+67)
-                .size(buttonWidth, buttonHeight)
-                .build();
-
-        addDrawableChild(widget);
-        addSelectableChild(widget);
-        buttons.add(widget);
-    }
-
-    @Unique
-    private InputSlider createYOffsetSlider(int yOffset, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue) {
-        int x = (width/2)-60-(textWidth+sliderWidth+elementSpacing);
-        int y = yOffset+68;
-        InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, -8f, 8f, 1f, startingValue, -64f, 64f, Text.translatable(key));
-
-        addDrawableChild(inputSlider.sliderWidget);
-        addSelectableChild(inputSlider.sliderWidget);
-        buttons.add(inputSlider.sliderWidget);
-
-        addDrawableChild(inputSlider.textFieldWidget);
-        addSelectableChild(inputSlider.textFieldWidget);
-        buttons.add(inputSlider.textFieldWidget);
-
-        return inputSlider;
-    }
-
-    @Unique
-    private InputSlider createPixelSlider(int yOffset, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue) {
-        int x = (width/2)+60;
-        int y = yOffset+68;
-        InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, 0, 64, 16, startingValue, 0, 1024f, Text.translatable(key));
-
-        addDrawableChild(inputSlider.sliderWidget);
-        addSelectableChild(inputSlider.sliderWidget);
-        buttons.add(inputSlider.sliderWidget);
-
-        addDrawableChild(inputSlider.textFieldWidget);
-        addSelectableChild(inputSlider.textFieldWidget);
-        buttons.add(inputSlider.textFieldWidget);
-
-        return inputSlider;
-    }
-
-    @Unique
-    private void toggleAspectLock(ButtonWidget button) {
-        setAspectLock(!aspectLocked);
-        button.setMessage(getAspectLockIcon(aspectLocked));
-    }
-
-    @Unique
-    private void setAspectLock(boolean to) {
-        aspectLocked = to;
-        if (aspectLocked) {
-            aspectRatio = inputSliders[0].getValue() / inputSliders[1].getValue();
-        }
-    }
-
-    @Unique
-    private void resetSize(ButtonWidget button) {
-        SignSideInfo info = SignedPaintingsClient.currentSignEdit.getSideInfo(front);
-        info.resetSize();
-        inputSliders[0].setValue(info.paintingInfo.getWidth());
-        inputSliders[1].setValue(info.paintingInfo.getHeight());
-        aspectRatio = inputSliders[0].getValue() / inputSliders[1].getValue();
-    }
-
-    @Unique
-    private static Text getAspectLockIcon(boolean aspectLocked) {
-        return Text.translatable(SignedPaintingsClient.MODID+".aspect."+ (aspectLocked ? "locked" : "unlocked"));
-    }
-
-    @Unique
-    private static Text getBackTypeText(BackType.Type backType) {
-        return Text.translatable(SignedPaintingsClient.MODID+".back_mode."+(backType.toString().toLowerCase(Locale.ROOT)));
-    }
-
-    @Unique
-    private void cyclePaintingBack(ButtonWidget button) {
-        BackType.Type newType = SignedPaintingsClient.currentSignEdit.getSideInfo(front).cyclePaintingBack();
-        button.setMessage(getBackTypeText(newType));
-    }
-
-    @Unique
-    private void onSizeSliderChanged(float value, boolean isWidth) {
-        if (aspectLocked) {
-            if (isWidth) value/=aspectRatio;
-            else value*=aspectRatio;
-
-            value = SignedPaintingsClient.roundFloatTo3DP(value);
-
-            inputSliders[isWidth ? 1 : 0].setValue(value);
-        }
-        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingSize(inputSliders[0].getValue(), inputSliders[1].getValue());
-    }
-
-    @Unique
-    private void onYOffsetSliderChanged(float value) {
-        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingYOffset(value);
-    }
-
-    @Unique
-    private void onPixelSliderChanged(float value) {
-        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingPixelsPerBlock(value);
-    }
-
-    @Unique
-    private static void copyToClipboard(String string){
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player != null) {
-            Clipboard clipboard = new Clipboard();
-            clipboard.setClipboard(client.getWindow().getHandle(), string);
-        }
-    }
 
     @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/block/entity/SignBlockEntity;ZZLnet/minecraft/text/Text;)V")
     private void onScreenOpen(SignBlockEntity blockEntity, boolean front, boolean filtered, Text title, CallbackInfo ci) {
@@ -381,7 +173,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Inject(at = @At("HEAD"), method = "keyPressed", cancellable = true)
     private void onKeyPress(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        for (InputSlider slider : inputSliders) {
+        for (InputSlider slider : UIHelper.getInputSliders()) {
             if (slider != null && slider.isFocused() && slider.keyPressed(keyCode, scanCode, modifiers)) {
                 cir.setReturnValue(true);
                 cir.cancel();
@@ -392,7 +184,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Inject(at = @At("HEAD"), method = "charTyped", cancellable = true)
     private void onCharType(char chr, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        for (InputSlider slider : inputSliders) {
+        for (InputSlider slider : UIHelper.getInputSliders()) {
             if (slider != null && slider.isFocused() && slider.charTyped(chr, modifiers)) {
                 cir.setReturnValue(true);
                 cir.cancel();
@@ -403,7 +195,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @ModifyVariable(at = @At("STORE"), method = "renderSignText", ordinal = 0)
     private boolean stopTextCaret(boolean bl) {
-        for (InputSlider slider : inputSliders) {
+        for (InputSlider slider : UIHelper.getInputSliders()) {
             if (slider != null && slider.isFocused() && selectionManager != null) {
                 selectionManager.setSelectionEnd(selectionManager.getSelectionStart());
                 return false;
@@ -431,7 +223,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         if (ImageManager.isValid(pasteString)) {
             String url = SignedPaintingsClient.imageManager.applyURLInferences(pasteString);
-            if (SignedPaintingsClient.imageManager.DomainBlocked(url) || (textRenderer.getWidth(SignedPaintingsClient.imageManager.getShortestURLInference(url)) > maxWidthPerLine*2.5)) {
+            if (SignedPaintingsClient.imageManager.DomainBlocked(url) || (textRenderer.getWidth(SignedPaintingsClient.imageManager.getShortestURLInference(url)) > maxWidthPerLine * 2.5)) {
                 uploadURL = url;
                 uploadButton.visible = true;
             } else {
@@ -450,9 +242,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             selectionStart = temp;
         }
 
-        newMessages[currentRow] = newMessages[currentRow].substring(0,selectionStart)+pasteString+newMessages[currentRow].substring(selectionEnd);
+        newMessages[currentRow] = newMessages[currentRow].substring(0, selectionStart) + pasteString + newMessages[currentRow].substring(selectionEnd);
         int currentWidth = textRenderer.getWidth(newMessages[currentRow]);
-        int cursor = selectionStart+pasteString.length();
+        int cursor = selectionStart + pasteString.length();
 
         if (currentWidth < maxWidthPerLine) {
             setCurrentRowMessage(newMessages[currentRow]);
@@ -465,7 +257,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             String line = newMessages[currentRow];
             int index = SignedPaintingsClient.getMaxFittingIndex(line, maxWidthPerLine, textRenderer);
             newMessages[currentRow] = line.substring(0, index);
-            if (currentRow == messages.length-1 || line.length() <= index) {
+            if (currentRow == messages.length - 1 || line.length() <= index) {
                 break;
             }
             if (currentRow == cursorRow && cursor > index) {
@@ -473,7 +265,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
                 cursor -= index;
             }
             currentRow++;
-            newMessages[currentRow] = line.substring(index)+newMessages[currentRow];
+            newMessages[currentRow] = line.substring(index) + newMessages[currentRow];
         }
         cursor = MathHelper.clamp(cursor, 0, newMessages[cursorRow].length());
 
@@ -502,28 +294,26 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             return;
         }
         if (link == null) {
-            uploadButton.setMessage(Text.translatable(SignedPaintingsClient.MODID+".upload_fail"));
+            uploadButton.setMessage(Text.translatable(SignedPaintingsClient.MODID + ".upload_fail"));
             uploadURL = null;
             return;
         }
         uploadButton.visible = false;
         signedPaintings$clear(false);
         signedPaintings$paste(link, 0, 0, false);
-        ((SignBlockEntityAccessor)this.blockEntity).signedPaintings$getSideInfo(this.front).loadPainting(this.front, this.blockEntity, true);
+        ((SignBlockEntityAccessor) this.blockEntity).signedPaintings$getSideInfo(this.front).loadPainting(this.front, this.blockEntity, true);
     }
 
     @Override
     public void signedPaintings$setVisibility(boolean to) {
-        for (ClickableWidget clickableWidget : buttons) {
+        for (ClickableWidget clickableWidget : UIHelper.getButtons()) {
             clickableWidget.visible = to;
         }
     }
 
     @Override
-    public void signedPaintings$initSliders(float width, float height) {
-        inputSliders[0].setValue(width);
-        inputSliders[1].setValue(height);
-        aspectRatio = width / height;
+    public void signedPaintings$initSliders(SignSideInfo info) {
+        UIHelper.updateUI(info);
     }
 
     @Override

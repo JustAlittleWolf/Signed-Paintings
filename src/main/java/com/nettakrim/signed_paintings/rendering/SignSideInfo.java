@@ -7,6 +7,7 @@ import com.nettakrim.signed_paintings.util.SignByteMapper;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 
 public class SignSideInfo {
     public SignText text;
@@ -70,7 +71,7 @@ public class SignSideInfo {
 
         if (data.ready && SignedPaintingsClient.currentSignEdit != null && ((SignBlockEntityAccessor)SignedPaintingsClient.currentSignEdit.sign).signedPaintings$hasSignSideInfo(this)) {
             SignedPaintingsClient.currentSignEdit.screen.signedPaintings$setVisibility(true);
-            SignedPaintingsClient.currentSignEdit.screen.signedPaintings$initSliders(cache.width, cache.height);
+            SignedPaintingsClient.currentSignEdit.screen.signedPaintings$initSliders(this);
         }
     }
 
@@ -89,11 +90,31 @@ public class SignSideInfo {
         cache.height = ySize;
         updateSignText();
     }
+    public void updatePaintingXOffset(float xOffset) {
+        if (paintingInfo == null) return;
+        paintingInfo.updateCuboidOffset(xOffset, paintingInfo.getYOffset(), paintingInfo.getZOffset());
+        cache.xOffset = xOffset;
+        updateSignText();
+    }
 
     public void updatePaintingYOffset(float yOffset) {
         if (paintingInfo == null) return;
-        paintingInfo.updateCuboidOffset(0, yOffset, 0);
+        paintingInfo.updateCuboidOffset(paintingInfo.getXOffset(), yOffset, paintingInfo.getZOffset());
         cache.yOffset = yOffset;
+        updateSignText();
+    }
+
+    public void updatePaintingZOffset(float zOffset) {
+        if (paintingInfo == null) return;
+        paintingInfo.updateCuboidOffset(paintingInfo.getXOffset(), paintingInfo.getYOffset(), zOffset);
+        cache.zOffset = zOffset;
+        updateSignText();
+    }
+    
+    public void updateRotatingVector(Vec3d vec) {
+        if (paintingInfo == null) return;
+        paintingInfo.updateRotationVec(vec);
+        cache.rotationVec = vec;
         updateSignText();
     }
 
@@ -143,8 +164,21 @@ public class SignSideInfo {
         paintingInfo.updateCuboidCentering(cache.xCentering, cache.yCentering);
         paintingInfo.updateCuboidSize(cache.width, cache.height);
         paintingInfo.setBackType(cache.backType);
-        paintingInfo.updateCuboidOffset(0, cache.yOffset, 0);
+        paintingInfo.updateCuboidOffset(cache.xOffset, cache.yOffset, cache.zOffset);
         paintingInfo.updatePixelsPerBlock(cache.pixelsPerBlock);
+        paintingInfo.updateRotationVec(cache.rotationVec);
+    }
+
+    public static Vec3d getRotVector(String s) {
+        String[] parts = s.split(",");
+        if (parts.length == 3) {
+            return new Vec3d(
+                    Float.parseFloat(parts[0]),
+                    Float.parseFloat(parts[1]),
+                    Float.parseFloat(parts[2])
+            );
+        }
+        return null;
     }
 
     private static class PaintingDataCache {
@@ -154,7 +188,11 @@ public class SignSideInfo {
         private float width;
         private float height;
         private BackType.Type backType = BackType.Type.SIGN;
+        private float xOffset;
         private float yOffset;
+        private float zOffset;
+        
+        private Vec3d rotationVec;
         private float pixelsPerBlock;
         private String extraText;
 
@@ -168,7 +206,10 @@ public class SignSideInfo {
             this.width = paintingInfo.getWidth();
             this.height = paintingInfo.getHeight();
             this.backType = BackType.Type.SIGN;
+            this.xOffset = 0;
             this.yOffset = 0;
+            this.zOffset = 0;
+            this.rotationVec = new Vec3d(0, 0, 0);
         }
 
         public void parseAfterUrl(String s) {
@@ -180,9 +221,15 @@ public class SignSideInfo {
 
             if (currentIndex < parts.length && tryParseSize(parts[currentIndex])) currentIndex++;
 
-            if (currentIndex < parts.length && tryParseOffset(parts[currentIndex])) currentIndex++;
+            if (currentIndex < parts.length && tryParseYOffset(parts[currentIndex])) currentIndex++;
 
             if (currentIndex < parts.length && tryParsePixelsPerBlock(parts[currentIndex])) currentIndex++;
+
+            if (currentIndex < parts.length && tryParseXOffset(parts[currentIndex])) currentIndex++;
+
+            if (currentIndex < parts.length && tryParseZOffset(parts[currentIndex])) currentIndex++;
+            
+            if (currentIndex < parts.length && tryParseRotationVec(parts[currentIndex])) currentIndex++;
 
             StringBuilder builder = new StringBuilder();
             for (int i = currentIndex; i < parts.length; i++) {
@@ -216,7 +263,16 @@ public class SignSideInfo {
             return true;
         }
 
-        private boolean tryParseOffset(String s) {
+        private boolean tryParseXOffset(String s) {
+            try {
+                this.xOffset = MathHelper.clamp(Float.parseFloat(s), -64f, 64f);
+            } catch (Exception ignored) {
+                return false;
+            }
+            return true;
+        }
+
+        private boolean tryParseYOffset(String s) {
             try {
                 this.yOffset = MathHelper.clamp(Float.parseFloat(s), -64f, 64f);
             } catch (Exception ignored) {
@@ -224,6 +280,30 @@ public class SignSideInfo {
             }
             return true;
         }
+
+        private boolean tryParseZOffset(String s) {
+            try {
+                this.zOffset = MathHelper.clamp(Float.parseFloat(s), -64f, 64f);
+            } catch (Exception ignored) {
+                return false;
+            }
+            return true;
+        }
+
+        private boolean tryParseRotationVec(String s) {
+            try {
+                Vec3d vec = getRotVector(s);
+                if (vec != null) {
+                    this.rotationVec = vec;
+                } else {
+                    return false;
+                }
+            } catch (Exception ignored) {
+                return false;
+            }
+            return true;
+        }
+
 
         private boolean tryParsePixelsPerBlock(String s) {
             try {
@@ -238,10 +318,16 @@ public class SignSideInfo {
             String urlString = SignedPaintingsClient.imageManager.getShortestURLInference(url);
             String widthString = getShortFloatString(width);
             String heightString = getShortFloatString(height);
+            String xOffsetString = getShortFloatString(xOffset);
             String yOffsetString = getShortFloatString(yOffset);
+            String zOffsetString = getShortFloatString(zOffset);
+            String rotString = getRotString(rotationVec);
             String pixelsPerBlockString = getShortFloatString(pixelsPerBlock);
 
-            String text = urlString + '|' + Centering.getName(true, xCentering) + Centering.getName(false, yCentering) + BackType.getName(backType) + '|' + widthString + ':' + heightString + '|' + yOffsetString + '|' + pixelsPerBlockString;
+            String text = urlString + '|' + Centering.getName(true, xCentering) +
+                    Centering.getName(false, yCentering) + BackType.getName(backType) + '|' + widthString + ':' +
+                    heightString + '|' + yOffsetString + '|' + pixelsPerBlockString + '|' + xOffsetString + '|' +
+                    zOffsetString + '|' + rotString; // x and z offset and rotation to the end for backwards compatibility
             String actualText = SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(text) + SignByteMapper.DELIMITER + extraText;
 
             SignedPaintingsClient.currentSignEdit.screen.signedPaintings$clear(false);
@@ -255,6 +341,12 @@ public class SignSideInfo {
             s = s.replaceAll("\\.66[67]+$",".667");
             s = s.replaceAll("\\.333+$",".333");
             return s;
+        }
+
+        private String getRotString(Vec3d rotationVec) {
+            return getShortFloatString((float) rotationVec.x) + "," +
+                    getShortFloatString((float) rotationVec.y) + "," +
+                    getShortFloatString((float) rotationVec.z);
         }
     }
 }

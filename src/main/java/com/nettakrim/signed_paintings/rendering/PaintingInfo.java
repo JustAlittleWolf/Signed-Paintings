@@ -13,6 +13,7 @@ import net.minecraft.client.util.ModelIdentifier;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class PaintingInfo {
@@ -21,7 +22,7 @@ public class PaintingInfo {
     private ImageData image;
     private Sprite back;
     public SignType.Type signType;
-    public float rotation;
+    public Vec3d rotationVec;
     private float width;
     private float height;
     private float depth;
@@ -39,7 +40,7 @@ public class PaintingInfo {
         this.blockEntity = blockEntity;
         this.image = image;
         this.signType = SignType.getType(blockEntity.getCachedState().getBlock());
-        this.rotation = isFront ? 0 : 180;
+        this.rotationVec = new Vec3d(0, isFront ? 0 : 180, 0);
         resetCuboid();
     }
 
@@ -108,8 +109,19 @@ public class PaintingInfo {
         updateCuboid();
     }
 
+    public void updateRotationVec(Vec3d rotationVec) {
+        this.rotationVec = rotationVec;
+        updateCuboid();
+    }
+
+    public float getXOffset() {
+        return xOffset;
+    }
     public float getYOffset() {
         return yOffset;
+    }
+    public float getZOffset() {
+        return zOffset;
     }
 
     public void updatePixelsPerBlock(float pixelsPerBlock) {
