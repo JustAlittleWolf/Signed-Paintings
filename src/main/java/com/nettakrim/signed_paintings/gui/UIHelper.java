@@ -46,7 +46,6 @@ public class UIHelper {
         UIHelper.screen = screen;
 
         buttons.clear();
-        addCenteringButtons();
 
         float width;
         float height;
@@ -71,19 +70,10 @@ public class UIHelper {
             info.working = true;
         }
 
-        inputSliders[0] = createSizingSlider(Centering.Type.MAX, AREA_SIZE, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID + ".size.x", width);
-        createLockingButton(Centering.Type.CENTER, AREA_SIZE, BUTTON_HEIGHT, getAspectLockIcon(aspectLocked));
-        createResetButton(Centering.Type.CENTER, AREA_SIZE, 80, BUTTON_HEIGHT, Text.translatable(SignedPaintingsClient.MODID + ".size.reset"));
-        inputSliders[1] = createSizingSlider(Centering.Type.MIN, AREA_SIZE, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID + ".size.y", height);
-
-        inputSliders[0].setOnValueChanged(value -> onSizeSliderChanged(value, true));
-        inputSliders[1].setOnValueChanged(value -> onSizeSliderChanged(value, false));
-        aspectRatio = width / height;
-
-        createBackModeButton(104, BUTTON_HEIGHT, backType);
-        inputSliders[2] = createPixelSlider(50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID + ".pixels_per_block", pixelsPerBlock);
-        inputSliders[2].setOnValueChanged(UIHelper::onPixelSliderChanged);
-        createBackgroundButton(104, BUTTON_HEIGHT);
+        // LEFT
+        createCenteringButtons();
+        createCopyUrlButton();
+        createCopyUncompressedButton();
 
         inputSliders[3] = createOffsetSlider(0, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".offset_x", offsetVec.x);
         inputSliders[3].setOnValueChanged(UIHelper::onXOffsetSliderChanged);
@@ -99,11 +89,23 @@ public class UIHelper {
         inputSliders[8] = createRotateSlider(32, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".rotation_z", rotationVec.z);
         inputSliders[8].setOnValueChanged(UIHelper::onZRotationSliderChanged);
 
-        createCopyUrlButton();
-        createCopyUncompressedButton();
+        //RIGHT
+        inputSliders[0] = createSizingSlider(Centering.Type.MAX, AREA_SIZE, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID + ".size.x", width);
+        createLockingButton(Centering.Type.CENTER, AREA_SIZE, BUTTON_HEIGHT, getAspectLockIcon(aspectLocked));
+        createResetButton(Centering.Type.CENTER, AREA_SIZE, 80, BUTTON_HEIGHT, Text.translatable(SignedPaintingsClient.MODID + ".size.reset"));
+        inputSliders[1] = createSizingSlider(Centering.Type.MIN, AREA_SIZE, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID + ".size.y", height);
+
+        inputSliders[0].setOnValueChanged(value -> onSizeSliderChanged(value, true));
+        inputSliders[1].setOnValueChanged(value -> onSizeSliderChanged(value, false));
+        aspectRatio = width / height;
+
+        createBackModeButton(104, BUTTON_HEIGHT, backType);
+        inputSliders[2] = createPixelSlider(50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID + ".pixels_per_block", pixelsPerBlock);
+        inputSliders[2].setOnValueChanged(UIHelper::onPixelSliderChanged);
+        createBackgroundButton(104, BUTTON_HEIGHT);
     }
 
-    private static void addCenteringButtons() {
+    private static void createCenteringButtons() {
         Centering.Type[] centering = Centering.Type.values();
         //x centering is reversed to make the buttons have a sensible order when using tab
         for (Centering.Type yCentering : centering) {
