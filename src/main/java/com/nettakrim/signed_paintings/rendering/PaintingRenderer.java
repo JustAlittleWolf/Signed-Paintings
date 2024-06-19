@@ -23,10 +23,9 @@ public class PaintingRenderer {
 
         matrices.push();
         matrices.translate(0.5F, 0.5F, 0.5F);
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotationDegrees));
-        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees((float) info.rotationVec.x));
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees((float) info.rotationVec.y));
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotationDegrees + (float)info.rotationVec.y));
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees((float) info.rotationVec.z));
+        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees((float) info.rotationVec.x));
         info.cuboid.setupRendering(matrices);
 
         VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(model.getLayer(info.getImageIdentifier()));
