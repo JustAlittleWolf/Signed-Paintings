@@ -33,7 +33,7 @@ public class InputSlider {
         sliderWidget = createSlider(x, y, sliderWidth, height, text, minSlider, maxSlider, sliderStep);
         sliderWidget.setChangedListener(this::onSliderChanged);
 
-        textFieldWidget = createTextField(x+textWidth+elementSpacing+1, y+1, textWidth-2, height-2);
+        textFieldWidget = createTextField(x+sliderWidth+elementSpacing+1, y+1, textWidth-2, height-2);
         textFieldWidget.setChangedListener(this::onTextChanged);
         textFieldWidget.setTextPredicate(textPredicate);
 

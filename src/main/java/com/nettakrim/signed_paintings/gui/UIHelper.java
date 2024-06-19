@@ -21,7 +21,15 @@ import java.util.Locale;
 public class UIHelper {
 
     public static final int BUTTON_HEIGHT = 14;
+    private static final int BUTTON_WIDTH = 115;
     private static final int PADDING = 10;
+
+    private static final int INPUT_SLIDER_TEXT = 45;
+    private static final int INPUT_SLIDER_SLIDER = 64;
+    
+    private static final int SPACING_X = BUTTON_WIDTH - INPUT_SLIDER_TEXT - INPUT_SLIDER_SLIDER - 1;
+    private static final int SPACING_Y = 18;
+    
     private static final int AREA_SIZE = BUTTON_HEIGHT * 2 + 5;
 
     private static final InputSlider[] inputSliders = new InputSlider[9];
@@ -72,37 +80,38 @@ public class UIHelper {
 
         // LEFT
         createCenteringButtons();
-        createCopyUrlButton();
-        createCopyUncompressedButton();
+        int yOff = 55;
+        createButton(PADDING, yOff, (BUTTON_WIDTH - SPACING_X) / 2, Text.translatable(SignedPaintingsClient.MODID + ".copy_url"), UIHelper::copyURL);
+        createButton(MathHelper.ceil(PADDING + (BUTTON_WIDTH + SPACING_X) / 2f), yOff, (BUTTON_WIDTH - SPACING_X) / 2, Text.translatable(SignedPaintingsClient.MODID + ".copy_data"), UIHelper::copyData);
 
-        inputSliders[3] = createOffsetSlider(0, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".offset_x", offsetVec.x);
+        inputSliders[3] = createInputSlider(PADDING, getYPosition(yOff, 1.5f), SignedPaintingsClient.MODID + ".offset_x", -8f, 8f, 0.25f, -64f, 64f, offsetVec.x);
         inputSliders[3].setOnValueChanged(UIHelper::onXOffsetSliderChanged);
-        inputSliders[4] = createOffsetSlider(16, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".offset_y", offsetVec.y);
+        inputSliders[4] = createInputSlider(PADDING, getYPosition(yOff, 2.5f), SignedPaintingsClient.MODID + ".offset_y", -8f, 8f, 0.25f, -64f, 64f, offsetVec.y);
         inputSliders[4].setOnValueChanged(UIHelper::onYOffsetSliderChanged);
-        inputSliders[5] = createOffsetSlider(32, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".offset_z", offsetVec.z);
+        inputSliders[5] = createInputSlider(PADDING, getYPosition(yOff, 3.5f), SignedPaintingsClient.MODID + ".offset_z", -8f, 8f, 0.25f, -64f, 64f, offsetVec.z);
         inputSliders[5].setOnValueChanged(UIHelper::onZOffsetSliderChanged);
 
-        inputSliders[6] = createRotateSlider(0, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".rotation_x", rotationVec.x);
+        inputSliders[6] = createInputSlider(PADDING, getYPosition(yOff, 5f), SignedPaintingsClient.MODID + ".rotation_x", -180f, 180f, 22.5f, -360f, 360f, rotationVec.x);
         inputSliders[6].setOnValueChanged(UIHelper::onXRotationSliderChanged);
-        inputSliders[7] = createRotateSlider(16, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".rotation_y", rotationVec.y);
+        inputSliders[7] = createInputSlider(PADDING, getYPosition(yOff, 6f), SignedPaintingsClient.MODID + ".rotation_y", -180f, 180f, 22.5f, -360f, 360f, rotationVec.y);
         inputSliders[7].setOnValueChanged(UIHelper::onYRotationSliderChanged);
-        inputSliders[8] = createRotateSlider(32, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".rotation_z", rotationVec.z);
+        inputSliders[8] = createInputSlider(PADDING, getYPosition(yOff, 7f), SignedPaintingsClient.MODID + ".rotation_z", -180f, 180f, 22.5f, -360f, 360f, rotationVec.z);
         inputSliders[8].setOnValueChanged(UIHelper::onZRotationSliderChanged);
 
         //RIGHT
-        inputSliders[0] = createSizingSlider(Centering.Type.MAX, AREA_SIZE, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID + ".size.x", width);
-        createLockingButton(Centering.Type.CENTER, AREA_SIZE, BUTTON_HEIGHT, getAspectLockIcon(aspectLocked));
-        createResetButton(Centering.Type.CENTER, AREA_SIZE, 80, BUTTON_HEIGHT, Text.translatable(SignedPaintingsClient.MODID + ".size.reset"));
-        inputSliders[1] = createSizingSlider(Centering.Type.MIN, AREA_SIZE, 50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID + ".size.y", height);
+        inputSliders[0] = createInputSlider(-PADDING, 0, SignedPaintingsClient.MODID + ".size.x", 0.5f, 10f, 0.5f, 1/32f, 64f, width);
+        createButton(BUTTON_HEIGHT - PADDING - BUTTON_WIDTH, SPACING_Y, BUTTON_HEIGHT, getAspectLockIcon(aspectLocked), UIHelper::toggleAspectLock);
+        createButton(-PADDING, SPACING_Y, BUTTON_WIDTH - BUTTON_HEIGHT - SPACING_X, Text.translatable(SignedPaintingsClient.MODID + ".size.reset"), UIHelper::resetSize);
+        inputSliders[1] = createInputSlider(-PADDING, getYPosition(0, 2f), SignedPaintingsClient.MODID + ".size.y", 0.5f, 10f, 0.5f, 1/32f, 64f, height);
 
         inputSliders[0].setOnValueChanged(value -> onSizeSliderChanged(value, true));
         inputSliders[1].setOnValueChanged(value -> onSizeSliderChanged(value, false));
         aspectRatio = width / height;
 
-        createBackModeButton(104, BUTTON_HEIGHT, backType);
-        inputSliders[2] = createPixelSlider(50, 50, BUTTON_HEIGHT, 5, SignedPaintingsClient.MODID + ".pixels_per_block", pixelsPerBlock);
+        backModeButton = createButton(-PADDING, getYPosition(0, 3.5f), BUTTON_WIDTH, getBackTypeText(backType), UIHelper::cyclePaintingBack);
+        inputSliders[2] = createInputSlider(-PADDING, getYPosition(0, 4.5f), SignedPaintingsClient.MODID + ".pixels_per_block", 0, 64, 16, 0, 1024, pixelsPerBlock);
         inputSliders[2].setOnValueChanged(UIHelper::onPixelSliderChanged);
-        createBackgroundButton(104, BUTTON_HEIGHT);
+        createButton(-PADDING, getYPosition(0, 5.5f), BUTTON_WIDTH, getBackgroundText(isBackgroundEnabled), UIHelper::cycleBackground);
     }
 
     private static void createCenteringButtons() {
@@ -133,98 +142,25 @@ public class UIHelper {
         return MathHelper.floor(Centering.getOffset(size, centering)) + screenSize / 2 - buttonSize / 2;
     }
 
-    private static void createBackModeButton(int buttonWidth, int buttonHeight, BackType.Type backType) {
-        backModeButton = ButtonWidget.builder(getBackTypeText(backType), UIHelper::cyclePaintingBack)
-                .position(screenWidth - PADDING - buttonWidth,
-                        58)
-                .size(buttonWidth, buttonHeight)
-                .build();
-        buttons.add(backModeButton);
+    private static int getYPosition(int offset, float count) {
+        return offset + Math.round(SPACING_Y * count);
     }
 
-    private static void createBackgroundButton(int buttonWidth, int buttonHeight) {
-        ButtonWidget backgroundButton = ButtonWidget.builder(getBackgroundText(isBackgroundEnabled), UIHelper::cycleBackground)
-                .position(screenWidth - PADDING - buttonWidth, 90)
-                .size(buttonWidth, buttonHeight)
-                .build();
-        buttons.add(backgroundButton);
+    private static int getAlignedOffset(int offset, int width) {
+        if (offset >= 0) {
+            return offset;
+        }
+        return (screenWidth - width) + offset;
     }
 
-    private static void createCopyUrlButton() {
-        ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".copy_url"),
-                        button -> {
-                            copyToClipboard(SignedPaintingsClient.currentSignEdit.getSideInfo(front).getUrl());
-                            screen.close();
-                        })
-                .position(PADDING, 64)
-                .size(46, BUTTON_HEIGHT)
-                .build();
-
-        buttons.add(widget);
+    private static ButtonWidget createButton(int xOffset, int yOffset, int width, Text text, ButtonWidget.PressAction pressAction) {
+        ButtonWidget button = ButtonWidget.builder(text, pressAction).position(getAlignedOffset(xOffset, width), PADDING + yOffset).size(width, BUTTON_HEIGHT).build();
+        buttons.add(button);
+        return button;
     }
 
-    private static void createCopyUncompressedButton() {
-        ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".copy_data"),
-                        button -> {
-                            copyToClipboard(SignedPaintingsClient.currentSignEdit.getSideInfo(front).getData());
-                            screen.close();
-                        })
-                .position(PADDING + 46 + 10, 64)
-                .size(48, BUTTON_HEIGHT)
-                .build();
-
-        buttons.add(widget);
-    }
-
-    private static InputSlider createSizingSlider(Centering.Type centering, int areaSize, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue) {
-        int x = screenWidth - PADDING - textWidth - sliderWidth - elementSpacing + 1;
-        int y = getCenteringButtonPosition(areaSize, centering, widgetHeight, 0) + (areaSize / 2) + (widgetHeight / 2) + PADDING;
-        InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, 0.5f, 10f, 0.5f, startingValue, 1 / 32f, 64f, Text.translatable(key));
-        buttons.add(inputSlider.sliderWidget);
-        buttons.add(inputSlider.textFieldWidget);
-        return inputSlider;
-    }
-
-    private static void createLockingButton(Centering.Type centering, int areaSize, int buttonSize, Text text) {
-        ButtonWidget widget = ButtonWidget.builder(text, UIHelper::toggleAspectLock)
-                .position(screenWidth - buttonSize - PADDING - 90,
-                        getCenteringButtonPosition(areaSize, centering, buttonSize, 0) + (areaSize / 2) + (buttonSize / 2) + PADDING)
-                .size(buttonSize, buttonSize)
-                .build();
-        buttons.add(widget);
-    }
-
-    private static void createResetButton(Centering.Type centering, int areaSize, int buttonWidth, int buttonHeight, Text text) {
-        ButtonWidget widget = ButtonWidget.builder(text, UIHelper::resetSize)
-                .position(screenWidth - buttonWidth - PADDING,
-                        getCenteringButtonPosition(areaSize, centering, buttonHeight, 0) + (areaSize / 2) + (buttonHeight / 2) + PADDING)
-                .size(buttonWidth, buttonHeight)
-                .build();
-        buttons.add(widget);
-    }
-
-    private static InputSlider createOffsetSlider(int yOffset, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue) {
-        int x = PADDING;
-        int y = 64 + BUTTON_HEIGHT + 4 + yOffset;
-        InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, -8f, 8f, 0.25f, startingValue, -64f, 64f, Text.translatable(key));
-        buttons.add(inputSlider.sliderWidget);
-        buttons.add(inputSlider.textFieldWidget);
-        return inputSlider;
-    }
-
-    private static InputSlider createRotateSlider(int yOffset, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue) {
-        int x = PADDING;
-        int y = yOffset + 132;
-        InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, -180f, 180f, 22.5f, startingValue, -360f, 360f, Text.translatable(key));
-        buttons.add(inputSlider.sliderWidget);
-        buttons.add(inputSlider.textFieldWidget);
-        return inputSlider;
-    }
-
-    private static InputSlider createPixelSlider(int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue) {
-        int x = screenWidth - PADDING - textWidth - sliderWidth - elementSpacing + 1;
-        int y = 74;
-        InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, BUTTON_HEIGHT, elementSpacing, 0, 64, 16, startingValue, 0, 1024f, Text.translatable(key));
+    private static InputSlider createInputSlider(int xOffset, int yOffset, String key, float sliderMin, float sliderMax, float sliderStep, float valueMin, float valueMax, float valueCurrent) {
+        InputSlider inputSlider = new InputSlider(getAlignedOffset(xOffset, BUTTON_WIDTH), PADDING + yOffset, INPUT_SLIDER_TEXT, INPUT_SLIDER_SLIDER, BUTTON_HEIGHT, SPACING_X + 1, sliderMin, sliderMax, sliderStep, valueCurrent, valueMin, valueMax, Text.translatable(key));
         buttons.add(inputSlider.sliderWidget);
         buttons.add(inputSlider.textFieldWidget);
         return inputSlider;
@@ -316,6 +252,16 @@ public class UIHelper {
 
     private static void onPixelSliderChanged(float value) {
         SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingPixelsPerBlock(value);
+    }
+
+    private static void copyURL(ButtonWidget button) {
+        copyToClipboard(SignedPaintingsClient.currentSignEdit.getSideInfo(front).getUrl());
+        screen.close();
+    }
+
+    private static void copyData(ButtonWidget button) {
+        copyToClipboard(SignedPaintingsClient.currentSignEdit.getSideInfo(front).getData());
+        screen.close();
     }
 
     private static void copyToClipboard(String string) {
