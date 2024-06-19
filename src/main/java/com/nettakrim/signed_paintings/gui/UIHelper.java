@@ -14,6 +14,7 @@ import net.minecraft.client.util.Clipboard;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -34,9 +35,11 @@ public class UIHelper {
     private static boolean aspectLocked = true;
     private static boolean isBackgroundEnabled = true;
     private static float aspectRatio;
-    private static Vec3d rotationVec;
     private static PaintingInfo info;
     private static ButtonWidget backModeButton;
+
+    private static Vector3f offsetVec;
+    private static Vector3f rotationVec;
 
     public static void init(boolean isFront, Screen screen, SignBlockEntityAccessor blockEntity) {
         UIHelper.front = isFront;
@@ -59,18 +62,14 @@ public class UIHelper {
             width = 1f;
             height = 1f;
             backType = BackType.Type.SIGN;
-            xOffset = 0;
-            yOffset = 0;
-            zOffset = 0;
             pixelsPerBlock = 0;
-            rotationVec = new Vec3d(0, 0, 0);
+            offsetVec = new Vector3f(0, 0, 0);
+            rotationVec = new Vector3f(0, 0, 0);
         } else {
             width = info.getWidth();
             height = info.getHeight();
             backType = info.getBackType();
-            xOffset = info.getXOffset();
-            yOffset = info.getYOffset();
-            zOffset = info.getZOffset();
+            offsetVec = info.offsetVec;
             rotationVec = info.rotationVec;
             pixelsPerBlock = info.getPixelsPerBlock();
             info.working = true;
@@ -90,11 +89,11 @@ public class UIHelper {
         inputSliders[2].setOnValueChanged(UIHelper::onPixelSliderChanged);
         createBackgroundButton(104, BUTTON_HEIGHT);
 
-        inputSliders[3] = createOffsetSlider(0, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".offset_x", xOffset, true);
+        inputSliders[3] = createOffsetSlider(0, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".offset_x", (float) offsetVec.x, true);
         inputSliders[3].setOnValueChanged(UIHelper::onXOffsetSliderChanged);
-        inputSliders[4] = createOffsetSlider(16, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".offset_y", yOffset, false);
+        inputSliders[4] = createOffsetSlider(16, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".offset_y", (float) offsetVec.y, false);
         inputSliders[4].setOnValueChanged(UIHelper::onYOffsetSliderChanged);
-        inputSliders[5] = createOffsetSlider(32, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".offset_z", zOffset, true);
+        inputSliders[5] = createOffsetSlider(32, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".offset_z", (float) offsetVec.z, true);
         inputSliders[5].setOnValueChanged(UIHelper::onZOffsetSliderChanged);
 
         inputSliders[6] = createRotateSlider(0, 45, 58, BUTTON_HEIGHT, 15, SignedPaintingsClient.MODID + ".rotation_x", (float) rotationVec.x);
@@ -288,29 +287,32 @@ public class UIHelper {
     }
 
     private static void onXOffsetSliderChanged(float value) {
-        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingXOffset(value);
+        offsetVec.x = value;
+        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingOffset(offsetVec);
     }
 
     private static void onYOffsetSliderChanged(float value) {
-        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingYOffset(value);
+        offsetVec.y = value;
+        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingOffset(offsetVec);
     }
 
     private static void onZOffsetSliderChanged(float value) {
-        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingZOffset(value);
+        offsetVec.z = value;
+        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingOffset(offsetVec);
     }
 
     private static void onXRotationSliderChanged(float value) {
-        rotationVec = new Vec3d(value, rotationVec.y, rotationVec.z);
+        rotationVec.x = value;
         SignedPaintingsClient.currentSignEdit.getSideInfo(front).updateRotatingVector(rotationVec);
     }
 
     private static void onYRotationSliderChanged(float value) {
-        rotationVec = new Vec3d(rotationVec.x, value, rotationVec.z);
+        rotationVec.y = value;
         SignedPaintingsClient.currentSignEdit.getSideInfo(front).updateRotatingVector(rotationVec);
     }
 
     private static void onZRotationSliderChanged(float value) {
-        rotationVec = new Vec3d(rotationVec.x, rotationVec.y, value);
+        rotationVec.z = value;
         SignedPaintingsClient.currentSignEdit.getSideInfo(front).updateRotatingVector(rotationVec);
     }
 
@@ -347,9 +349,9 @@ public class UIHelper {
         inputSliders[0].setValue(info.paintingInfo.getWidth());
         inputSliders[1].setValue(info.paintingInfo.getHeight());
         inputSliders[2].setValue(info.paintingInfo.getPixelsPerBlock());
-        inputSliders[3].setValue(info.paintingInfo.getXOffset());
-        inputSliders[4].setValue(info.paintingInfo.getYOffset());
-        inputSliders[5].setValue(info.paintingInfo.getZOffset());
+        inputSliders[3].setValue((float) info.paintingInfo.offsetVec.x);
+        inputSliders[4].setValue((float) info.paintingInfo.offsetVec.y);
+        inputSliders[5].setValue((float) info.paintingInfo.offsetVec.z);
         inputSliders[6].setValue((float) info.paintingInfo.rotationVec.x);
         inputSliders[7].setValue((float) info.paintingInfo.rotationVec.y);
         inputSliders[8].setValue((float) info.paintingInfo.rotationVec.z);

@@ -15,6 +15,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import org.joml.Vector3f;
 
 public class PaintingInfo {
     public BlockEntity blockEntity;
@@ -22,17 +23,17 @@ public class PaintingInfo {
     private ImageData image;
     private Sprite back;
     public SignType.Type signType;
-    public Vec3d rotationVec;
+    public Vector3f rotationVec;
+    public Vector3f offsetVec;
     private float width;
     private float height;
     private float depth;
-    private float xOffset;
-    private float yOffset;
-    private float zOffset;
     private Centering.Type xCentering;
     private Centering.Type yCentering;
     private BackType.Type backType;
     private float pixelsPerBlock;
+    public boolean isFront;
+
     public boolean working;
     private boolean needsBackUpdate = false;
 
@@ -40,7 +41,7 @@ public class PaintingInfo {
         this.blockEntity = blockEntity;
         this.image = image;
         this.signType = SignType.getType(blockEntity.getCachedState().getBlock());
-        this.rotationVec = new Vec3d(0, isFront ? 0 : 180, 0);
+        this.isFront = isFront;
         resetCuboid();
     }
 
@@ -84,9 +85,9 @@ public class PaintingInfo {
         float reducedDepth = this.depth;
         if (backType == BackType.Type.NONE) reducedDepth = 1/256f;
         this.cuboid = switch (signType) {
-            case WALL                  -> Cuboid.CreateWallCuboid(    width, xCentering, height, yCentering, reducedDepth, xOffset, yOffset, zOffset);
-            case STANDING              -> Cuboid.CreateFlushCuboid(   width, xCentering, height, yCentering, reducedDepth, xOffset, yOffset, zOffset);
-            case HANGING, WALL_HANGING -> Cuboid.CreateCentralCuboid( width, xCentering, height, yCentering, reducedDepth, xOffset, yOffset, zOffset);
+            case WALL                  -> Cuboid.CreateWallCuboid(    width, xCentering, height, yCentering, reducedDepth);
+            case STANDING              -> Cuboid.CreateFlushCuboid(   width, xCentering, height, yCentering, reducedDepth);
+            case HANGING, WALL_HANGING -> Cuboid.CreateCentralCuboid( width, xCentering, height, yCentering, reducedDepth);
         };
     }
 
@@ -102,26 +103,14 @@ public class PaintingInfo {
         updateCuboid();
     }
 
-    public void updateCuboidOffset(float xOffset, float yOffset, float zOffset) {
-        this.xOffset = xOffset;
-        this.yOffset = yOffset;
-        this.zOffset = zOffset;
+    public void updateOffsetVec(Vector3f offsetVec) {
+        this.offsetVec = offsetVec;
         updateCuboid();
     }
 
-    public void updateRotationVec(Vec3d rotationVec) {
+    public void updateRotationVec(Vector3f rotationVec) {
         this.rotationVec = rotationVec;
         updateCuboid();
-    }
-
-    public float getXOffset() {
-        return xOffset;
-    }
-    public float getYOffset() {
-        return yOffset;
-    }
-    public float getZOffset() {
-        return zOffset;
     }
 
     public void updatePixelsPerBlock(float pixelsPerBlock) {

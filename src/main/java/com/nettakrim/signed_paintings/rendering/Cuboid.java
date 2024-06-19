@@ -17,21 +17,21 @@ public class Cuboid {
     private Matrix4f positionCache;
     private Matrix3f normalCache;
 
-    public Cuboid(float xSize, float ySize, float zSize, float xOffset, float yOffset, float zOffset) {
+    private Cuboid(float xSize, float ySize, float zSize, float xOffset, float yOffset, float zOffset) {
         this.size = new Vector3f(xSize, ySize, zSize);
         this.offset = new Vector3f(xOffset, yOffset, zOffset);
     }
 
-    public static Cuboid CreateWallCuboid(float xSize, Centering.Type xCentering, float ySize, Centering.Type yCentering, float zSize, float xOffset, float yOffset, float zOffset) {
-        return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering)+xOffset, Centering.getOffset(ySize, yCentering)+yOffset, -0.5025f + (zSize/2) + zOffset);
+    public static Cuboid CreateWallCuboid(float xSize, Centering.Type xCentering, float ySize, Centering.Type yCentering, float zSize) {
+        return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering), Centering.getOffset(ySize, yCentering), -0.5025f + (zSize/2));
     }
 
-    public static Cuboid CreateFlushCuboid(float xSize, Centering.Type xCentering, float ySize, Centering.Type yCentering, float zSize, float xOffset, float yOffset, float zOffset) {
-        return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering)+xOffset, Centering.getOffset(ySize, yCentering)+yOffset, 0.5f - (zSize/2) + zOffset);
+    public static Cuboid CreateFlushCuboid(float xSize, Centering.Type xCentering, float ySize, Centering.Type yCentering, float zSize) {
+        return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering), Centering.getOffset(ySize, yCentering), 0.5f - (zSize/2));
     }
 
-    public static Cuboid CreateCentralCuboid(float xSize, Centering.Type xCentering, float ySize, Centering.Type yCentering, float zSize, float xOffset, float yOffset, float zOffset) {
-        return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering)+xOffset, Centering.getOffset(ySize, yCentering)+yOffset, (zSize/2) + zOffset - 0.0025f);
+    public static Cuboid CreateCentralCuboid(float xSize, Centering.Type xCentering, float ySize, Centering.Type yCentering, float zSize) {
+        return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering), Centering.getOffset(ySize, yCentering), (zSize/2) - 0.0025f);
     }
 
     public static Cuboid CreateOverlayCuboid(float aspectRatio) {

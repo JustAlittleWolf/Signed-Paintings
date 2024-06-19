@@ -7,7 +7,7 @@ import com.nettakrim.signed_paintings.util.SignByteMapper;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import org.joml.Vector3f;
 
 public class SignSideInfo {
     public SignText text;
@@ -90,28 +90,15 @@ public class SignSideInfo {
         cache.height = ySize;
         updateSignText();
     }
-    public void updatePaintingXOffset(float xOffset) {
+
+    public void updatePaintingOffset(Vector3f vec) {
         if (paintingInfo == null) return;
-        paintingInfo.updateCuboidOffset(xOffset, paintingInfo.getYOffset(), paintingInfo.getZOffset());
-        cache.xOffset = xOffset;
+        paintingInfo.updateOffsetVec(vec);
+        cache.offsetVec = vec;
         updateSignText();
     }
 
-    public void updatePaintingYOffset(float yOffset) {
-        if (paintingInfo == null) return;
-        paintingInfo.updateCuboidOffset(paintingInfo.getXOffset(), yOffset, paintingInfo.getZOffset());
-        cache.yOffset = yOffset;
-        updateSignText();
-    }
-
-    public void updatePaintingZOffset(float zOffset) {
-        if (paintingInfo == null) return;
-        paintingInfo.updateCuboidOffset(paintingInfo.getXOffset(), paintingInfo.getYOffset(), zOffset);
-        cache.zOffset = zOffset;
-        updateSignText();
-    }
-    
-    public void updateRotatingVector(Vec3d vec) {
+    public void updateRotatingVector(Vector3f vec) {
         if (paintingInfo == null) return;
         paintingInfo.updateRotationVec(vec);
         cache.rotationVec = vec;
@@ -164,15 +151,15 @@ public class SignSideInfo {
         paintingInfo.updateCuboidCentering(cache.xCentering, cache.yCentering);
         paintingInfo.updateCuboidSize(cache.width, cache.height);
         paintingInfo.setBackType(cache.backType);
-        paintingInfo.updateCuboidOffset(cache.xOffset, cache.yOffset, cache.zOffset);
+        paintingInfo.updateOffsetVec(cache.offsetVec);
         paintingInfo.updatePixelsPerBlock(cache.pixelsPerBlock);
         paintingInfo.updateRotationVec(cache.rotationVec);
     }
 
-    public static Vec3d getRotVector(String s) {
+    public static Vector3f getRotVector(String s) {
         String[] parts = s.split(",");
         if (parts.length == 3) {
-            return new Vec3d(
+            return new Vector3f(
                     Float.parseFloat(parts[0]),
                     Float.parseFloat(parts[1]),
                     Float.parseFloat(parts[2])
@@ -188,11 +175,9 @@ public class SignSideInfo {
         private float width;
         private float height;
         private BackType.Type backType = BackType.Type.SIGN;
-        private float xOffset;
-        private float yOffset;
-        private float zOffset;
-        
-        private Vec3d rotationVec;
+
+        private Vector3f offsetVec;
+        private Vector3f rotationVec;
         private float pixelsPerBlock;
         private String extraText;
 
@@ -206,10 +191,8 @@ public class SignSideInfo {
             this.width = paintingInfo.getWidth();
             this.height = paintingInfo.getHeight();
             this.backType = BackType.Type.SIGN;
-            this.xOffset = 0;
-            this.yOffset = 0;
-            this.zOffset = 0;
-            this.rotationVec = new Vec3d(0, 0, 0);
+            this.offsetVec = new Vector3f(0, 0, 0);
+            this.rotationVec = new Vector3f(0, 0, 0);
         }
 
         public void parseAfterUrl(String s) {
@@ -265,7 +248,7 @@ public class SignSideInfo {
 
         private boolean tryParseXOffset(String s) {
             try {
-                this.xOffset = MathHelper.clamp(Float.parseFloat(s), -64f, 64f);
+                this.offsetVec.x = MathHelper.clamp(Float.parseFloat(s), -64f, 64f);
             } catch (Exception ignored) {
                 return false;
             }
@@ -274,7 +257,7 @@ public class SignSideInfo {
 
         private boolean tryParseYOffset(String s) {
             try {
-                this.yOffset = MathHelper.clamp(Float.parseFloat(s), -64f, 64f);
+                this.offsetVec.y = MathHelper.clamp(Float.parseFloat(s), -64f, 64f);
             } catch (Exception ignored) {
                 return false;
             }
@@ -283,7 +266,7 @@ public class SignSideInfo {
 
         private boolean tryParseZOffset(String s) {
             try {
-                this.zOffset = MathHelper.clamp(Float.parseFloat(s), -64f, 64f);
+                this.offsetVec.z = MathHelper.clamp(Float.parseFloat(s), -64f, 64f);
             } catch (Exception ignored) {
                 return false;
             }
@@ -292,7 +275,7 @@ public class SignSideInfo {
 
         private boolean tryParseRotationVec(String s) {
             try {
-                Vec3d vec = getRotVector(s);
+                Vector3f vec = getRotVector(s);
                 if (vec != null) {
                     this.rotationVec = vec;
                 } else {
@@ -318,9 +301,9 @@ public class SignSideInfo {
             String urlString = SignedPaintingsClient.imageManager.getShortestURLInference(url);
             String widthString = getShortFloatString(width);
             String heightString = getShortFloatString(height);
-            String xOffsetString = getShortFloatString(xOffset);
-            String yOffsetString = getShortFloatString(yOffset);
-            String zOffsetString = getShortFloatString(zOffset);
+            String xOffsetString = getShortFloatString(offsetVec.x);
+            String yOffsetString = getShortFloatString(offsetVec.y);
+            String zOffsetString = getShortFloatString(offsetVec.z);
             String rotString = getRotString(rotationVec);
             String pixelsPerBlockString = getShortFloatString(pixelsPerBlock);
 
@@ -343,10 +326,10 @@ public class SignSideInfo {
             return s;
         }
 
-        private String getRotString(Vec3d rotationVec) {
-            return getShortFloatString((float) rotationVec.x) + "," +
-                    getShortFloatString((float) rotationVec.y) + "," +
-                    getShortFloatString((float) rotationVec.z);
+        private String getRotString(Vector3f rotationVec) {
+            return getShortFloatString(rotationVec.x) + "," +
+                   getShortFloatString(rotationVec.y) + "," +
+                   getShortFloatString(rotationVec.z);
         }
     }
 }
