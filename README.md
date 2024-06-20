@@ -23,7 +23,9 @@ Avoid having to make map art!
 
 ## Commands:
 
-`/paintings:toggle all|banners|shields|signs` - temporarily disable rendering for images
+`/paintings:toggle all|banners|shields|signs` - toggles rendering for images
+
+`/paintings:toggle culling` - makes signs visible from further away, at the cost of worse fps - use [this mod](https://modrinth.com/mod/beer) instead if you want a bit more control over the distance
 
 `/paintings:reload all|<url>` - redownload all or a specific image
 
@@ -61,4 +63,4 @@ What if my friends don't have the mod?
 
 Fabric? Forge? Quilt? Backports?
 
-> The mod is developed for Fabric, and while untested for Quilt it should work - Forge is currently unsupported.
+> The mod is developed for the latest versions Fabric, and while untested for Quilt it should work - Forge is currently unsupported, [Sinytra Connector](https://modrinth.com/mod/connector) may allow it to work on forge, but dont be suprised if you encounter bugs!
