@@ -119,9 +119,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Override
-    public void renderBackground(DrawContext context) {
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
         if (!isInfoCorrect() || UIHelper.isBackgroundEnabled()) {
-            super.renderBackground(context);
+            super.renderBackground(context, mouseX, mouseY, delta);
         }
     }
 
