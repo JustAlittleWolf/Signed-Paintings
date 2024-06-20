@@ -59,7 +59,7 @@ Will my friends see the custom painting?
 
 What if my friends don't have the mod?
 
-> They will see a sign with a URL and some text for the settings. However, you can hide the sign underground then shift the painting up using the offset slider
+> They will see a sign with a URL and some text for the settings. However, you can hide the sign underground then shift the painting up using the offset slider (the text may also be compressed, in which case it would look like a bunch of thin lines)
 
 Fabric? Forge? Quilt? Backports?
 
