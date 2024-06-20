@@ -4,6 +4,7 @@ import com.nettakrim.signed_paintings.access.OverlayInfoAccessor;
 import com.nettakrim.signed_paintings.rendering.OverlayInfo;
 import net.minecraft.block.entity.BannerBlockEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,7 +27,7 @@ public class BannerBlockEntityMixin implements OverlayInfoAccessor {
     }
 
     @Inject(at = @At("TAIL"), method = "readNbt")
-    private void onNBTRead(NbtCompound nbt, CallbackInfo ci) {
+    private void onNBTRead(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup, CallbackInfo ci) {
         if (customName != null) overlayInfo.loadOverlay(customName.getString());
     }
 

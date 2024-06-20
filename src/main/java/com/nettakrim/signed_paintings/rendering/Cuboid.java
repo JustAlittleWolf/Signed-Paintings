@@ -12,8 +12,7 @@ public class Cuboid {
     private final Vector3fc size;
     private final Vector3fc offset;
 
-    private Matrix4f positionCache;
-    private Matrix3f normalCache;
+    private MatrixStack.Entry cache;
 
     private Cuboid(float xSize, float ySize, float zSize, float xOffset, float yOffset, float zOffset) {
         this.size = new Vector3f(xSize, ySize, zSize);
@@ -44,13 +43,11 @@ public class Cuboid {
     }
 
     public void setupRendering(MatrixStack matrices) {
-        MatrixStack.Entry entry = matrices.peek();
-        this.positionCache = entry.getPositionMatrix();
-        this.normalCache = entry.getNormalMatrix();
+        cache = matrices.peek();
     }
 
     public void renderFace(VertexConsumer vertexConsumer, Vector3f face, boolean split, float minU, float maxU, float minV, float maxV, int light) {
-        if (positionCache == null) {
+        if (cache == null) {
             return;
         }
 
@@ -123,6 +120,6 @@ public class Cuboid {
     }
 
     private void vertex(VertexConsumer vertexConsumer, float x, float y, float z, float u, float v, float normalX, float normalY, float normalZ, int light) {
-        vertexConsumer.vertex(positionCache, x, y, z).color(255, 255, 255, 255).texture(u, v).overlay(OverlayTexture.DEFAULT_UV).light(light).normal(normalCache, normalX, normalY, normalZ).next();
+        vertexConsumer.vertex(cache.getPositionMatrix(), x, y, z).color(255, 255, 255, 255).texture(u, v).overlay(OverlayTexture.DEFAULT_UV).light(light).normal(cache, normalX, normalY, normalZ).next();
     }
 }
