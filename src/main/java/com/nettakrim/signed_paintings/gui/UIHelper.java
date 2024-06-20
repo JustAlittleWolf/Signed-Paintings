@@ -114,9 +114,9 @@ public class UIHelper {
         backModeButton = createButton(-PADDING, getYPosition(0, 3.25f), BUTTON_WIDTH, getBackTypeText(backType), UIHelper::cyclePaintingBack);
         inputSliders[2] = createInputSlider(-PADDING, getYPosition(0, 4.25f), SignedPaintingsClient.MODID + ".pixels_per_block", 0, 64, 16, 0, 1024, pixelsPerBlock);
         inputSliders[2].setOnValueChanged(UIHelper::onPixelSliderChanged);
-        createButton(-PADDING, getYPosition(0, 5.25f), BUTTON_WIDTH, getBackgroundText(isBackgroundEnabled), UIHelper::cycleBackground);
 
-        uploadButton = createButton(-PADDING, getYPosition(Y_OFF, 5.5f), BUTTON_WIDTH, Text.translatable(SignedPaintingsClient.MODID + ".upload_prompt"), upload);
+        uploadButton = createButton(-PADDING, getYPosition(Y_OFF, 4.5f), BUTTON_WIDTH, Text.translatable(SignedPaintingsClient.MODID + ".upload_prompt"), upload);
+        createButton(-PADDING, getYPosition(Y_OFF, 5.5f), BUTTON_WIDTH, getBackgroundText(isBackgroundEnabled), UIHelper::cycleBackground);
         createButton(-PADDING, getYPosition(Y_OFF, 6.5f), BUTTON_WIDTH, ScreenTexts.DONE, (ButtonWidget a) -> screen.close());
     }
 
