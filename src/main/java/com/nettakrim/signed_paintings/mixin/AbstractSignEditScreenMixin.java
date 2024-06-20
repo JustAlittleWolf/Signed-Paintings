@@ -1,5 +1,8 @@
 package com.nettakrim.signed_paintings.mixin;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.access.AbstractSignEditScreenAccessor;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
@@ -10,6 +13,7 @@ import com.nettakrim.signed_paintings.gui.UIHelper;
 import com.nettakrim.signed_paintings.rendering.PaintingInfo;
 import com.nettakrim.signed_paintings.rendering.SignSideInfo;
 import com.nettakrim.signed_paintings.util.ImageManager;
+import com.nettakrim.signed_paintings.util.SignByteMapper;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SignBlock;
 import net.minecraft.block.entity.SignBlockEntity;
@@ -21,7 +25,6 @@ import net.minecraft.client.gui.screen.ingame.AbstractSignEditScreen;
 import net.minecraft.client.gui.screen.ingame.SignEditScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
@@ -79,19 +82,26 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Shadow
     protected abstract void setCurrentRowMessage(String message);
 
-    @Shadow
-    protected abstract void renderSignText(DrawContext context);
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawCenteredTextWithShadow(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;III)V"))
+    private boolean shouldRenderTitle(DrawContext context, TextRenderer textRenderer, Text text, int centerX, int y, int color){
+        return !isInfoCorrect();
+    }
 
-    @Shadow
-    protected abstract void renderSignBackground(DrawContext var1, BlockState var2);
-
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/DiffuseLighting;disableGuiDepthLighting()V"), cancellable = true)
-    private void modifyRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        PaintingInfo info = getInfo();
-        if (info != null && info.isReady()) {
-            renderUI(context);
-            super.render(context, mouseX, mouseY, delta);
-            ci.cancel();
+    @WrapOperation(method = "renderSign", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/AbstractSignEditScreen;translateForRender(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/block/BlockState;)V"))
+    private void translateForRender(AbstractSignEditScreen instance, DrawContext context, BlockState blockState, Operation<Void> original){
+        if (isInfoCorrect()) {
+            if (this.getClass().equals(SignEditScreen.class)) {
+                boolean bl = blockState.getBlock() instanceof SignBlock;
+                if (bl) {
+                    context.getMatrices().translate(0.0f, -16.0f, -50.0f);
+                } else {
+                    context.getMatrices().translate(0.0f, -4.0f, -50.0f);
+                }
+            }
+            context.getMatrices().translate(90.0f, 38.0f, 50.0f);
+            context.getMatrices().scale(0.5f, 0.5f, 0.5f);
+        } else {
+            original.call(instance, context, blockState);
         }
     }
 
@@ -101,37 +111,17 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         return front ? sign.signedPaintings$getFrontPaintingInfo() : sign.signedPaintings$getBackPaintingInfo();
     }
 
-    @Override
-    public void renderBackground(DrawContext context) {
+    @Unique
+    private boolean isInfoCorrect() {
         PaintingInfo info = getInfo();
-        if (info == null || !info.isReady() || UIHelper.isBackgroundEnabled()) {
-            super.renderBackground(context);
-        }
+        return info != null && info.isReady();
     }
 
-    @Unique
-    private void renderUI(DrawContext context) {
-        // This could be improved in future with smaller Mixin
-        DiffuseLighting.disableGuiDepthLighting();
-        this.renderBackground(context);
-        BlockState blockState = this.blockEntity.getCachedState();
-        context.getMatrices().push();
-        if (this.getClass().equals(SignEditScreen.class)) {
-            boolean bl = blockState.getBlock() instanceof SignBlock;
-            if (bl) {
-                context.getMatrices().translate(0.0f, -16.0f, -50.0f);
-            } else {
-                context.getMatrices().translate(0.0f, -4.0f, -50.0f);
-            }
+    @Override
+    public void renderBackground(DrawContext context) {
+        if (!isInfoCorrect() || UIHelper.isBackgroundEnabled()) {
+            super.renderBackground(context);
         }
-        context.getMatrices().translate(90.0f, 38.0f, 50.0f);
-        context.getMatrices().scale(0.5f, 0.5f, 0.5f);
-        context.getMatrices().push();
-        this.renderSignBackground(context, blockState);
-        context.getMatrices().pop();
-        this.renderSignText(context);
-        context.getMatrices().pop();
-        DiffuseLighting.enableGuiDepthLighting();
     }
 
     @Redirect(method = "renderSignText", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/AbstractSignEditScreen;getTextScale()Lorg/joml/Vector3f;"))
@@ -150,7 +140,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             addSelectableChild(widget);
         }
 
-        uploadButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".upload_prompt"), this::upload).dimensions(this.width / 2 - 100, (this.height / 4 + 144) - 25, 200, 20).build();
+        uploadButton = UIHelper.createUploadButton(this::upload);
         addDrawableChild(uploadButton);
         addSelectableChild(uploadButton);
         if (uploadURL == null) uploadButton.visible = false;
@@ -161,8 +151,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         SignedPaintingsClient.currentSignEdit.setSelectionManager(selectionManager);
 
-        PaintingInfo info = UIHelper.getInfo();
-        signedPaintings$setVisibility(info != null && info.isReady());
+        signedPaintings$setVisibility(isInfoCorrect());
     }
 
 
@@ -226,14 +215,18 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         int maxWidthPerLine = this.blockEntity.getMaxTextWidth();
         TextRenderer textRenderer = SignedPaintingsClient.client.textRenderer;
 
+        String url = SignedPaintingsClient.imageManager.applyURLInferences(pasteString);
         if (ImageManager.isValid(pasteString)) {
-            String url = SignedPaintingsClient.imageManager.applyURLInferences(pasteString);
             if (SignedPaintingsClient.imageManager.DomainBlocked(url) || (textRenderer.getWidth(SignedPaintingsClient.imageManager.getShortestURLInference(url)) > maxWidthPerLine * 2.5)) {
                 uploadURL = url;
                 uploadButton.visible = true;
             } else {
                 pasteString = url;
             }
+        }
+        if (!SignedPaintingsClient.imageManager.DomainBlocked(url) &&
+                textRenderer.getWidth(url) > maxWidthPerLine * 3.5) {
+            pasteString = SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(url);
         }
 
         String[] newMessages = new String[messages.length];
@@ -312,9 +305,13 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Override
     public void signedPaintings$setVisibility(boolean to) {
         for (ClickableWidget clickableWidget : UIHelper.getButtons()) {
-            clickableWidget.visible = to;
+            if (clickableWidget != null) {
+                clickableWidget.visible = to;
+            }
         }
-        doneButton.visible = !to;
+        if (doneButton != null) {
+            doneButton.visible = !to;
+        }
     }
 
     @Override
