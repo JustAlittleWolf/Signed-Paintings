@@ -212,6 +212,7 @@ public class UIHelper {
     private static void cycleBackground(ButtonWidget button) {
         isBackgroundEnabled = !isBackgroundEnabled;
         button.setMessage(getBackgroundText(isBackgroundEnabled));
+        SignedPaintingsClient.imageManager.makeChange();
     }
 
     private static void onSizeSliderChanged(float value, boolean isWidth) {
@@ -297,6 +298,10 @@ public class UIHelper {
 
     public static boolean isBackgroundEnabled() {
         return isBackgroundEnabled;
+    }
+
+    public static void setBackgroundEnabled(boolean to) {
+        isBackgroundEnabled = to;
     }
 
     public static void updateUI(SignSideInfo info) {

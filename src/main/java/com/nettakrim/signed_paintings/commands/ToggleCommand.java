@@ -52,30 +52,35 @@ public class ToggleCommand {
         SignedPaintingsClient.renderBanners = value;
         SignedPaintingsClient.renderShields = value;
         sayMessage("all", value);
+        SignedPaintingsClient.imageManager.makeChange();
         return 1;
     }
 
     private static int toggleSigns(CommandContext<FabricClientCommandSource> context) {
         SignedPaintingsClient.renderSigns = !SignedPaintingsClient.renderSigns;
         sayMessage("signs", SignedPaintingsClient.renderSigns);
+        SignedPaintingsClient.imageManager.makeChange();
         return 1;
     }
 
     private static int toggleBanners(CommandContext<FabricClientCommandSource> context) {
         SignedPaintingsClient.renderBanners = !SignedPaintingsClient.renderBanners;
         sayMessage("banners", SignedPaintingsClient.renderBanners);
+        SignedPaintingsClient.imageManager.makeChange();
         return 1;
     }
 
     private static int toggleShields(CommandContext<FabricClientCommandSource> context) {
         SignedPaintingsClient.renderShields = !SignedPaintingsClient.renderShields;
         sayMessage("shields", SignedPaintingsClient.renderShields);
+        SignedPaintingsClient.imageManager.makeChange();
         return 1;
     }
 
     private static int toggleCulling(CommandContext<FabricClientCommandSource> context) {
         SignedPaintingsClient.reduceCulling = !SignedPaintingsClient.reduceCulling;
         sayMessage("culling", SignedPaintingsClient.reduceCulling);
+        SignedPaintingsClient.imageManager.makeChange();
         return 1;
     }
 

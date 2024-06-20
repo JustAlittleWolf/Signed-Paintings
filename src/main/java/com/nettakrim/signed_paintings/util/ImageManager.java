@@ -2,6 +2,7 @@ package com.nettakrim.signed_paintings.util;
 
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
+import com.nettakrim.signed_paintings.gui.UIHelper;
 import com.nettakrim.signed_paintings.rendering.OverlayInfo;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
@@ -50,15 +51,37 @@ public class ImageManager {
                 Scanner scanner = new Scanner(data);
                 if (scanner.hasNextLine()) scanner.nextLine();
                 int phase = 0;
+                int lines = 0;
                 while (scanner.hasNextLine()) {
                     String s = scanner.nextLine();
-                    if (s.startsWith("-")) phase++;
-                    else if (phase == 0) {
+                    if (s.startsWith("-")) {
+                        phase++;
+                        lines = 0;
+                        continue;
+                    } else {
+                        lines++;
+                    }
+
+                    if (phase == 0) {
                         blockedURLs.add(s);
                     } else if (phase == 1) {
                         allowedDomains.add(s);
                     } else if (phase == 2) {
                         SignedPaintingsClient.loggingEnabled = s.equals("true");
+                    } else if (phase == 3) {
+                        boolean active = s.equals("true");
+                        switch (lines) {
+                            case 0:
+                                SignedPaintingsClient.renderSigns = active;
+                            case 1:
+                                SignedPaintingsClient.renderBanners = active;
+                            case 2:
+                                SignedPaintingsClient.renderShields = active;
+                            case 3:
+                                SignedPaintingsClient.reduceCulling = active;
+                            case 4:
+                                UIHelper.setBackgroundEnabled(active);
+                        }
                     }
                 }
                 scanner.close();
@@ -88,6 +111,13 @@ public class ImageManager {
 
             s.append("\n- Detailed Logs -");
             s.append("\n").append(SignedPaintingsClient.loggingEnabled ? "true" : "false");
+
+            s.append("\n- Rendering Toggles -");
+            s.append("\n").append(SignedPaintingsClient.renderSigns ? "true" : "false");
+            s.append("\n").append(SignedPaintingsClient.renderBanners ? "true" : "false");
+            s.append("\n").append(SignedPaintingsClient.renderShields ? "true" : "false");
+            s.append("\n").append(SignedPaintingsClient.reduceCulling ? "true" : "false");
+            s.append("\n").append(UIHelper.isBackgroundEnabled() ? "true" : "false");
 
             writer.write(s.toString());
             writer.close();
