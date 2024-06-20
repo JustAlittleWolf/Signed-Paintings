@@ -151,8 +151,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         SignedPaintingsClient.currentSignEdit.setSelectionManager(selectionManager);
 
-        PaintingInfo info = UIHelper.getInfo();
-        signedPaintings$setVisibility(info != null && info.isReady());
+        signedPaintings$setVisibility(isInfoCorrect());
     }
 
 
@@ -306,9 +305,13 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Override
     public void signedPaintings$setVisibility(boolean to) {
         for (ClickableWidget clickableWidget : UIHelper.getButtons()) {
-            clickableWidget.visible = to;
+            if (clickableWidget != null) {
+                clickableWidget.visible = to;
+            }
         }
-        doneButton.visible = !to;
+        if (doneButton != null) {
+            doneButton.visible = !to;
+        }
     }
 
     @Override
