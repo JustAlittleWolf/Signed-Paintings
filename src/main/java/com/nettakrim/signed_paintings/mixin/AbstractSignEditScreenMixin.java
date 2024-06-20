@@ -93,9 +93,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             if (this.getClass().equals(SignEditScreen.class)) {
                 boolean bl = blockState.getBlock() instanceof SignBlock;
                 if (bl) {
-                    context.getMatrices().translate(0.0f, -16.0f, -50.0f);
+                    context.getMatrices().translate(0.0f, -16.0f, 0f);
                 } else {
-                    context.getMatrices().translate(0.0f, -4.0f, -50.0f);
+                    context.getMatrices().translate(0.0f, -4.0f, 0f);
                 }
             }
             context.getMatrices().translate(90.0f, 38.0f, 50.0f);
