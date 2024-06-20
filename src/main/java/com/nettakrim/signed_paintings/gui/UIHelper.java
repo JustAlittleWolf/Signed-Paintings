@@ -11,6 +11,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.util.Clipboard;
+import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import org.joml.Vector3f;
@@ -20,7 +21,7 @@ import java.util.Locale;
 
 public class UIHelper {
 
-    public static final int BUTTON_HEIGHT = 14;
+    private static final int BUTTON_HEIGHT = 14;
     private static final int BUTTON_WIDTH = 115;
     private static final int PADDING = 10;
 
@@ -49,7 +50,9 @@ public class UIHelper {
     private static Vector3f offsetVec;
     private static Vector3f rotationVec;
 
-    public static void init(boolean isFront, Screen screen, SignBlockEntityAccessor blockEntity) {
+    private static ButtonWidget uploadButton;
+
+    public static void init(boolean isFront, Screen screen, SignBlockEntityAccessor blockEntity, ButtonWidget.PressAction upload) {
         UIHelper.front = isFront;
         UIHelper.screenWidth = screen.width;
         UIHelper.screen = screen;
@@ -113,7 +116,8 @@ public class UIHelper {
         inputSliders[2].setOnValueChanged(UIHelper::onPixelSliderChanged);
         createButton(-PADDING, getYPosition(0, 5.25f), BUTTON_WIDTH, getBackgroundText(isBackgroundEnabled), UIHelper::cycleBackground);
 
-        createButton(-PADDING, getYPosition(Y_OFF, 6.5f), BUTTON_WIDTH, Text.translatable("gui.done"), (ButtonWidget a) -> screen.close());
+        uploadButton = createButton(-PADDING, getYPosition(Y_OFF, 5.5f), BUTTON_WIDTH, Text.translatable(SignedPaintingsClient.MODID + ".upload_prompt"), upload);
+        createButton(-PADDING, getYPosition(Y_OFF, 6.5f), BUTTON_WIDTH, ScreenTexts.DONE, (ButtonWidget a) -> screen.close());
     }
 
     private static void createCenteringButtons() {
@@ -138,12 +142,6 @@ public class UIHelper {
                 .build();
 
         buttons.add(widget);
-    }
-
-    public static ButtonWidget createUploadButton(ButtonWidget.PressAction pressAction) {
-        return ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".upload_prompt"), pressAction)
-                .position(getAlignedOffset(-PADDING, BUTTON_WIDTH), PADDING + getYPosition(Y_OFF, 5.5f))
-                .size(BUTTON_WIDTH, BUTTON_HEIGHT).build();
     }
 
     private static int getCenteringButtonPosition(int size, Centering.Type centering, int buttonSize, int screenSize) {
@@ -318,5 +316,9 @@ public class UIHelper {
 
     public static void addButton(BackgroundClick backgroundClick) {
         buttons.add(backgroundClick);
+    }
+
+    public static void setUploadVisibility(boolean to) {
+        uploadButton.visible = to;
     }
 }

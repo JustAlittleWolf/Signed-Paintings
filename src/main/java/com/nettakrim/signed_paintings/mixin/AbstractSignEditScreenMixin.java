@@ -133,17 +133,16 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private void init(CallbackInfo ci) {
         doneButton = (ClickableWidget)this.children().get(0);
 
-        UIHelper.init(front, this, (SignBlockEntityAccessor) blockEntity);
+        UIHelper.init(front, this, (SignBlockEntityAccessor) blockEntity, this::upload);
         ArrayList<ClickableWidget> uiButtons = UIHelper.getButtons();
         for (ClickableWidget widget : uiButtons) {
             addDrawableChild(widget);
             addSelectableChild(widget);
         }
 
-        uploadButton = UIHelper.createUploadButton(this::upload);
+        uploadButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".upload_prompt"), this::upload).dimensions(this.width / 2 - 100, (this.height / 4 + 144)-25, 200, 20).build();
         addDrawableChild(uploadButton);
         addSelectableChild(uploadButton);
-        if (uploadURL == null) uploadButton.visible = false;
 
         BackgroundClick backgroundClick = new BackgroundClick(UIHelper.getInputSliders());
         addSelectableChild(backgroundClick);
@@ -311,6 +310,10 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         }
         if (doneButton != null) {
             doneButton.visible = !to;
+        }
+        if (uploadButton != null) {
+            uploadButton.visible = uploadURL != null && !to;
+            UIHelper.setUploadVisibility(uploadURL != null && to);
         }
     }
 
