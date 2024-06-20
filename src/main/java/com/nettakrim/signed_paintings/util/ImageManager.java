@@ -187,7 +187,7 @@ public class ImageManager {
     }
 
     private void onImageLoad(BufferedImage image, String url, ImageData data) {
-        Identifier identifier = new Identifier(SignedPaintingsClient.MODID, createIdentifierSafeStringFromURL(url));
+        Identifier identifier = Identifier.of(SignedPaintingsClient.MODID, createIdentifierSafeStringFromURL(url));
         saveBufferedImageAsIdentifier(image, identifier);
         data.onImageReady(image, identifier);
         SignedPaintingsClient.info("Ready to render Image "+url, true);

@@ -120,6 +120,6 @@ public class Cuboid {
     }
 
     private void vertex(VertexConsumer vertexConsumer, float x, float y, float z, float u, float v, float normalX, float normalY, float normalZ, int light) {
-        vertexConsumer.vertex(cache.getPositionMatrix(), x, y, z).color(255, 255, 255, 255).texture(u, v).overlay(OverlayTexture.DEFAULT_UV).light(light).normal(cache, normalX, normalY, normalZ).next();
+        vertexConsumer.vertex(cache.getPositionMatrix(), x, y, z).color(255, 255, 255, 255).texture(u, v).overlay(OverlayTexture.DEFAULT_UV).light(light).normal(cache, normalX, normalY, normalZ);
     }
 }

@@ -162,7 +162,7 @@ public class PaintingInfo {
         if (this.backType == BackType.Type.SIGN) {
             String name = ((AbstractSignBlock) this.blockEntity.getCachedState().getBlock()).getWoodType().name();
             try {
-                back = SignedPaintingsClient.client.getSpriteAtlas(new Identifier("minecraft", "textures/atlas/blocks.png")).apply(new Identifier("minecraft", "block/" + name + "_planks"));
+                back = SignedPaintingsClient.client.getSpriteAtlas(Identifier.of("minecraft", "textures/atlas/blocks.png")).apply(Identifier.of("minecraft", "block/" + name + "_planks"));
             } catch (Exception ignored) {}
         }
         ModelIdentifier modelIdentifier = BlockModels.getModelId(blockState);
