@@ -98,7 +98,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
                     context.getMatrices().translate(0.0f, -4.0f, 0f);
                 }
             }
-            context.getMatrices().translate(90.0f, 38.0f, 50.0f);
+            // 97.5 is centered, but it looks a bit weird, deliberately offcentering it ends up looking better
+            context.getMatrices().translate(86.5f, 38.0f, 50.0f);
             context.getMatrices().scale(0.5f, 0.5f, 0.5f);
         } else {
             original.call(instance, context, blockState);
