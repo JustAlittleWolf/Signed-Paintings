@@ -217,14 +217,14 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         String url = SignedPaintingsClient.imageManager.applyURLInferences(pasteString);
         if (ImageManager.isValid(pasteString)) {
-            if (SignedPaintingsClient.imageManager.DomainBlocked(url) || (textRenderer.getWidth(SignedPaintingsClient.imageManager.getShortestURLInference(url)) > maxWidthPerLine * 2.5)) {
+            if (SignedPaintingsClient.imageManager.domainBlocked(url) || (textRenderer.getWidth(SignedPaintingsClient.imageManager.getShortestURLInference(url)) > maxWidthPerLine * 2.5)) {
                 uploadURL = url;
                 uploadButton.visible = true;
             } else {
                 pasteString = url;
             }
         }
-        if (!SignedPaintingsClient.imageManager.DomainBlocked(url) &&
+        if (!SignedPaintingsClient.imageManager.domainBlocked(url) &&
                 textRenderer.getWidth(url) > maxWidthPerLine * 3.5) {
             pasteString = SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(url);
         }

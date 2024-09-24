@@ -131,7 +131,7 @@ public class ImageManager {
     public void loadImage(String url, ImageDataLoadInterface onLoadCallback) {
         if (url.equals("https://")) return;
         ImageData imageData = urlToImageData.get(url);
-        boolean blocked = blockedURLs.contains(url) || DomainBlocked(url);
+        boolean blocked = blockedURLs.contains(url) || domainBlocked(url);
 
         if (!blocked && autoBlockNew) {
             SignedPaintingsClient.sayRaw(
@@ -275,7 +275,7 @@ public class ImageManager {
         allowedDomains.add(url);
     }
 
-    public boolean DomainBlocked(String url) {
+    public boolean domainBlocked(String url) {
         for (String allowed : allowedDomains) {
             if (url.startsWith(allowed)) {
                 return false;
@@ -285,6 +285,10 @@ public class ImageManager {
     }
 
     public String applyURLInferences(String text) {
+        if (text.startsWith("ftp://")) {
+            return text;
+        }
+
         //for some reason "https://i.imgur.com/Avp3T5M.pngabcdefg..." is a valid link, so it should be counted as just .png
         if (text.contains("i.imgur.com")) {
             int index = text.lastIndexOf('.');
