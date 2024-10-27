@@ -132,30 +132,30 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	public static void say(String key, Object... args) {
 		if (client.player == null) return;
 		Text text = Text.translatable(MODID+".say").setStyle(Style.EMPTY.withColor(nameTextColor)).append(Text.translatable(MODID+"."+key, args).setStyle(Style.EMPTY.withColor(textColor)));
-		client.player.sendMessage(text);
+		client.player.sendMessage(text, false);
 	}
 
 	public static void sayStyled(String key, Style style, Object... args) {
 		if (client.player == null) return;
 		Text text = Text.translatable(MODID+".say").setStyle(style.withColor(nameTextColor)).append(Text.translatable(MODID+"."+key, args).setStyle(Style.EMPTY.withColor(textColor)));
-		client.player.sendMessage(text);
+		client.player.sendMessage(text, false);
 	}
 
 	public static void say(MutableText text) {
 		if (client.player == null) return;
 		Text newText = Text.translatable(MODID+".say").setStyle(Style.EMPTY.withColor(nameTextColor)).append(text.setStyle(text.getStyle().withColor(textColor)));
-		client.player.sendMessage(newText);
+		client.player.sendMessage(newText, false);
 	}
 
 	public static void sayRaw(MutableText text) {
 		if (client.player == null) return;
-		client.player.sendMessage(text);
+		client.player.sendMessage(text, false);
 	}
 
 	public static void longSay(MutableText text) {
 		if (client.player == null) return;
 		Text newText = Text.translatable(MODID+".long_say").setStyle(Style.EMPTY.withColor(nameTextColor)).append(text.setStyle(text.getStyle().withColor(textColor)));
-		client.player.sendMessage(newText);
+		client.player.sendMessage(newText, false);
 	}
 
 	public static String getScreenshotDirectory() {

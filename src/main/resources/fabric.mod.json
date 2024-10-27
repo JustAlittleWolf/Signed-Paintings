@@ -24,9 +24,10 @@
 	"mixins": [
 		"signed_paintings.mixins.json"
 	],
+	"accessWidener" : "signed_paintings.accesswidener",
 	"depends": {
 		"fabricloader": ">=0.14.21",
-		"minecraft": ">=1.21.0",
+		"minecraft": ">=1.21.2",
 		"java": ">=17",
 		"fabric-api": "*"
 	},

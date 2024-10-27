@@ -25,7 +25,7 @@ import java.util.Map;
 
 @Mixin(SignBlockEntityRenderer.class)
 public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRendererAccessor, BlockEntityRenderer<SignBlockEntity> {
-    @Shadow @Final private Map<WoodType, SignBlockEntityRenderer.SignModel> typeToModel;
+    @Shadow @Final private Map<WoodType, SignBlockEntityRenderer.SignModelPair> typeToModelPair;
 
     @Inject(
             at = @At(
@@ -48,7 +48,7 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
         BlockState blockState = signBlockEntity.getCachedState();
         AbstractSignBlock block = (AbstractSignBlock)blockState.getBlock();
         WoodType woodType = AbstractSignBlock.getWoodType(block);
-        SignBlockEntityRenderer.SignModel model = typeToModel.get(woodType);
+        Model model = typeToModelPair.get(woodType).standing();
 
         return renderPaintings((SignBlockEntity)signBlockEntity, matrices, vertexConsumers, model, light, block, blockState);
     }
