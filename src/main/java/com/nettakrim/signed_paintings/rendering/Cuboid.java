@@ -79,7 +79,7 @@ public class Cuboid {
     }
 
     private void renderFaceRotated(VertexConsumer vertexConsumer, AxisAngle4f rotation, boolean split, float minU, float maxU, float minV, float maxV, int light) {
-        Vector3f normal = rotation.transform(new Vector3f(0, 0, 1));
+        Vector3f normal = rotation.transform(new Vector3f(0, 1, 0));
 
         if (!split) {
             renderQuad(vertexConsumer, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, rotation, minU, maxU, minV, maxV, normal, light);
