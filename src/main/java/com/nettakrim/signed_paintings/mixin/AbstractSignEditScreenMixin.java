@@ -240,7 +240,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         }
 
         if (!uploadButton.visible && !SignedPaintingsClient.imageManager.domainBlocked(url) && textRenderer.getWidth(url) > maxWidthPerLine * 3.5) {
-            pasteString = SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(url);
+            pasteString = SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(SignedPaintingsClient.imageManager.getShortestURLInference(url));
         }
 
         String[] newMessages = new String[messages.length];
