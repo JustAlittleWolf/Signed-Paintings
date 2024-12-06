@@ -12,6 +12,7 @@ import com.nettakrim.signed_paintings.gui.SignEditingInfo;
 import com.nettakrim.signed_paintings.gui.UIHelper;
 import com.nettakrim.signed_paintings.rendering.PaintingInfo;
 import com.nettakrim.signed_paintings.rendering.SignSideInfo;
+import com.nettakrim.signed_paintings.util.DiscordAlias;
 import com.nettakrim.signed_paintings.util.ImageManager;
 import com.nettakrim.signed_paintings.util.SignByteMapper;
 import net.minecraft.block.BlockState;
@@ -54,7 +55,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Final
     @Shadow
-    private SignBlockEntity blockEntity;
+    protected SignBlockEntity blockEntity;
 
     @Final
     @Shadow
@@ -216,7 +217,20 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         TextRenderer textRenderer = SignedPaintingsClient.client.textRenderer;
 
         String url = SignedPaintingsClient.imageManager.applyURLInferences(pasteString);
-        if (ImageManager.isValid(pasteString)) {
+
+        // special edge case for discord, since the discord alias is so specific, and is needed to reformat from media.discordapp to cdn.discordapp
+        if (DiscordAlias.isDiscord(url)) {
+            String encoded = DiscordAlias.encode(url);
+            url = DiscordAlias.decode(encoded);
+            // webp never works
+            if (encoded.split("\\?")[0].endsWith(".webp")) {
+                uploadURL = url;
+                uploadButton.visible = true;
+            } else {
+                pasteString = encoded;
+            }
+        // otherwise, prompt upload if its blocked or too long
+        } else if (ImageManager.isValid(pasteString)) {
             if (SignedPaintingsClient.imageManager.domainBlocked(url) || (textRenderer.getWidth(SignedPaintingsClient.imageManager.getShortestURLInference(url)) > maxWidthPerLine * 2.5)) {
                 uploadURL = url;
                 uploadButton.visible = true;
@@ -224,8 +238,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
                 pasteString = url;
             }
         }
-        if (!SignedPaintingsClient.imageManager.domainBlocked(url) &&
-                textRenderer.getWidth(url) > maxWidthPerLine * 3.5) {
+
+        if (!uploadButton.visible && !SignedPaintingsClient.imageManager.domainBlocked(url) && textRenderer.getWidth(url) > maxWidthPerLine * 3.5) {
             pasteString = SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(url);
         }
 
