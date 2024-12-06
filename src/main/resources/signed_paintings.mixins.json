@@ -16,7 +16,8 @@
     "ScreenshotRecorderMixin",
     "SelectionManagerMixin",
     "SignBlockEntityMixin",
-    "SignBlockEntityRendererMixin"
+    "SignBlockEntityRendererMixin",
+    "TextureManagerAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

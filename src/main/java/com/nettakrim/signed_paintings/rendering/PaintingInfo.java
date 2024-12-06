@@ -143,9 +143,9 @@ public class PaintingInfo {
             double rotation = ((AbstractSignBlock)this.blockEntity.getCachedState().getBlock()).getRotationDegrees(this.blockEntity.getCachedState());
             blockPos = switch (signType) {
                 case STANDING -> blockPos.down();
-                case WALL -> blockPos.offset(Direction.fromRotation(rotation+180), 1);
+                case WALL -> blockPos.offset(Direction.fromHorizontalDegrees(rotation+180), 1);
                 case HANGING -> blockPos.up();
-                case WALL_HANGING -> getSolidWallHang(world, blockPos, Direction.fromRotation(rotation+90));
+                case WALL_HANGING -> getSolidWallHang(world, blockPos, Direction.fromHorizontalDegrees(rotation+90));
             };
             blockState = world.getBlockState(blockPos);
 
@@ -167,7 +167,7 @@ public class PaintingInfo {
         }
         ModelIdentifier modelIdentifier = BlockModels.getModelId(blockState);
         if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getModel(modelIdentifier).getParticleSprite();
-        if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getMissingModel().getParticleSprite();
+        if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getMissingBlockModel().getParticleSprite();
         this.back = back;
     }
 

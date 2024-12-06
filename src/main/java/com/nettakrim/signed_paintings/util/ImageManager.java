@@ -3,6 +3,7 @@ package com.nettakrim.signed_paintings.util;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.gui.UIHelper;
+import com.nettakrim.signed_paintings.mixin.TextureManagerAccessor;
 import com.nettakrim.signed_paintings.rendering.OverlayInfo;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
@@ -232,7 +233,7 @@ public class ImageManager {
     }
 
     public static AbstractTexture getTexture(Identifier identifier) {
-        return SignedPaintingsClient.client.getTextureManager().getOrDefault(identifier, null);
+        return ((TextureManagerAccessor)SignedPaintingsClient.client.getTextureManager()).getTextures().get(identifier);
     }
 
     private CompletableFuture<BufferedImage> downloadImageBuffer(String urlStr) {

@@ -9,11 +9,10 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.render.*;
+import net.minecraft.client.render.block.entity.AbstractSignBlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
-import net.minecraft.client.render.block.entity.SignBlockEntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Vec3d;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -21,11 +20,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Map;
-
-@Mixin(SignBlockEntityRenderer.class)
+@Mixin(AbstractSignBlockEntityRenderer.class)
 public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRendererAccessor, BlockEntityRenderer<SignBlockEntity> {
-    @Shadow @Final private Map<WoodType, SignBlockEntityRenderer.SignModelPair> typeToModelPair;
+    @Shadow protected abstract Model getModel(BlockState state, WoodType woodType);
 
     @Inject(
             at = @At(
@@ -48,7 +45,7 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
         BlockState blockState = signBlockEntity.getCachedState();
         AbstractSignBlock block = (AbstractSignBlock)blockState.getBlock();
         WoodType woodType = AbstractSignBlock.getWoodType(block);
-        Model model = typeToModelPair.get(woodType).standing();
+        Model model = getModel(blockState, woodType);
 
         return renderPaintings((SignBlockEntity)signBlockEntity, matrices, vertexConsumers, model, light, block, blockState);
     }

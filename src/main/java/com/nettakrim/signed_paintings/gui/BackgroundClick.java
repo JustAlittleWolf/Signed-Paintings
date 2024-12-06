@@ -20,8 +20,8 @@ public class BackgroundClick extends ClickableWidget {
     protected void appendClickableNarrations(NarrationMessageBuilder builder) {}
 
     @Override
-    protected boolean clicked(double mouseX, double mouseY) {
-        if (!visible) return false;
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!(visible && isValidClickButton(button))) return false;
         for (InputSlider inputSlider : sliders) {
             if (inputSlider.isFocused()) return true;
         }
