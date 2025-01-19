@@ -3,9 +3,7 @@ package com.nettakrim.signed_paintings;
 import com.nettakrim.signed_paintings.commands.SignedPaintingsCommands;
 import com.nettakrim.signed_paintings.gui.SignEditingInfo;
 import com.nettakrim.signed_paintings.rendering.PaintingRenderer;
-import com.nettakrim.signed_paintings.util.ImageManager;
-import com.nettakrim.signed_paintings.util.URLAlias;
-import com.nettakrim.signed_paintings.util.UploadManager;
+import com.nettakrim.signed_paintings.util.*;
 import net.fabricmc.api.ClientModInitializer;
 
 import net.minecraft.block.entity.SignText;
@@ -49,11 +47,16 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		client = MinecraftClient.getInstance();
 
 		imageManager = new ImageManager();
-		imageManager.registerURLAlias(new URLAlias("https://i.imgur.com/", new String[]{"i.imgur.com/","imgur.com/","imgur:"}, ".png"));
-		imageManager.registerURLAlias(new URLAlias("https://iili.io/", new String[]{"freeimage.host/i/", "iili:"}, ".png"));
+
+		imageManager.registerURLAlias(new NormalAlias("https://i.imgur.com/", new String[]{"i.imgur.com/","imgur.com/","imgur:"}, ".png"));
+		imageManager.registerURLAlias(new NormalAlias("https://iili.io/", new String[]{"freeimage.host/i/", "iili:"}, ".png"));
 		imageManager.registerAllowedDomain("https://i.imgur.com/");
 		imageManager.registerAllowedDomain("https://iili.io/");
 		imageManager.registerAllowedDomain("https://i.ibb.co/");
+
+		imageManager.registerURLAlias(new DiscordAlias());
+		imageManager.registerAllowedDomain("https://media.discordapp.net/attachments/");
+		imageManager.registerAllowedDomain("https://cdn.discordapp.com/attachments/");
 
 		paintingRenderer = new PaintingRenderer();
 		renderSigns = true;
